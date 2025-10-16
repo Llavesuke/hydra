@@ -15,6 +15,7 @@
     "catalogue": "Catalogue",
     "downloads": "Downloads",
     "settings": "Settings",
+    "library": "Library",
     "my_library": "My library",
     "downloading_metadata": "{{title}} (Downloading metadata…)",
     "paused": "{{title}} (Paused)",
@@ -95,6 +96,7 @@
     "home": "Home",
     "catalogue": "Catalogue",
     "downloads": "Downloads",
+    "library": "Library",
     "search_results": "Search results",
     "settings": "Settings",
     "version_available_install": "Version {{version}} available. Click here to restart and install.",
@@ -397,6 +399,16 @@
     "options": "Manage",
     "extract": "Extract files",
     "extracting": "Extracting files…"
+  },
+  "library": {
+    "search_placeholder": "Search your library…",
+    "filters": "Filters",
+    "collections": "Collections",
+    "news": "News",
+    "loading": "Loading your library…",
+    "empty_title": "Nothing here yet",
+    "empty_description": "Try updating your search or toggles to discover games.",
+    "loading_skeleton_label": "Loading library entries"
   },
   "settings": {
     "downloads_path": "Downloads path",
