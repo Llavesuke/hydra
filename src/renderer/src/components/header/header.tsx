@@ -13,6 +13,7 @@ import cn from "classnames";
 const pathTitle: Record<string, string> = {
   "/": "home",
   "/catalogue": "catalogue",
+  "/library": "library",
   "/downloads": "downloads",
   "/settings": "settings",
 };
