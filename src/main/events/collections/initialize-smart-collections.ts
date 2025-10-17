@@ -4,7 +4,7 @@ import type { LibraryCollection } from "@types";
 export const initializeSmartCollections = async () => {
   try {
     const existingCollections = await collectionsSublevel.values().all();
-    
+
     const smartCollections: LibraryCollection[] = [
       {
         id: "favorites",
@@ -28,7 +28,7 @@ export const initializeSmartCollections = async () => {
       const exists = existingCollections.some(
         (c) => c.id === smartCollection.id
       );
-      
+
       if (!exists) {
         await collectionsSublevel.put(
           levelKeys.collection(smartCollection.id),

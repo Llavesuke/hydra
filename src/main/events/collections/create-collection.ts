@@ -7,7 +7,7 @@ const createCollection = async (
   name: string
 ) => {
   const id = `collection-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
-  
+
   const collection: LibraryCollection = {
     id,
     name,

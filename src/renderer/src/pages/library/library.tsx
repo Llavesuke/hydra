@@ -150,12 +150,9 @@ export default function Library() {
     setSearchQuery(event.target.value);
   };
 
-  const handleCollectionSelect = useCallback(
-    (collectionId: string | null) => {
-      setSelectedCollectionId(collectionId);
-    },
-    []
-  );
+  const handleCollectionSelect = useCallback((collectionId: string | null) => {
+    setSelectedCollectionId(collectionId);
+  }, []);
 
   const handleCreateCollection = useCallback(() => {
     setShowCreateModal(true);

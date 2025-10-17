@@ -4,7 +4,12 @@ import { Button } from "@renderer/components/button/button";
 import { useTranslation } from "react-i18next";
 import { useCallback, useState, useMemo } from "react";
 import { useCollections } from "@renderer/hooks";
-import { PencilIcon, TrashIcon, CheckIcon, XIcon } from "@primer/octicons-react";
+import {
+  PencilIcon,
+  TrashIcon,
+  CheckIcon,
+  XIcon,
+} from "@primer/octicons-react";
 import type { LibraryCollection, LibraryGame } from "@types";
 
 import "./modals.scss";
@@ -151,7 +156,10 @@ export function ManageCollectionsModal({
                       checked={isInCollection}
                       disabled={isProcessing}
                       onChange={() =>
-                        handleToggleGameInCollection(collection, selectedGame.id)
+                        handleToggleGameInCollection(
+                          collection,
+                          selectedGame.id
+                        )
                       }
                     />
                     <span>{collection.name}</span>
@@ -176,7 +184,6 @@ export function ManageCollectionsModal({
                     <TextField
                       value={editingName}
                       onChange={(e) => setEditingName(e.target.value)}
-                      autoFocus
                     />
                     <div className="manage-collections-modal__edit-actions">
                       <Button
