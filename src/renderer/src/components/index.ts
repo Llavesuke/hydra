@@ -20,3 +20,4 @@ export * from "./game-context-menu/game-context-menu";
 export * from "./game-context-menu/use-game-actions";
 export * from "./star-rating/star-rating";
 export * from "./library-game-card/library-game-card";
+export { default as SteamNewsSection } from "./steam-news-section/steam-news-section";

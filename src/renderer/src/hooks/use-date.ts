@@ -1,5 +1,5 @@
 import { formatDate, getDateLocale } from "@shared";
-import { format, formatDistance, subMilliseconds } from "date-fns";
+import { format, formatDistance, formatDistanceToNow, subMilliseconds } from "date-fns";
 import type { FormatDistanceOptions } from "date-fns";
 import { useTranslation } from "react-i18next";
 
@@ -48,5 +48,16 @@ export function useDate() {
     },
 
     formatDate: (date: number | Date | string) => formatDate(date, language),
+
+    formatRelativeTime: (date: number | Date | string): string => {
+      try {
+        return formatDistanceToNow(date, {
+          addSuffix: true,
+          locale: getDateLocale(language),
+        });
+      } catch (err) {
+        return "";
+      }
+    },
   };
 }

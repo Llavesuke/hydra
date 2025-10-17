@@ -5,7 +5,7 @@ import Skeleton, { SkeletonTheme } from "react-loading-skeleton";
 import VirtualList from "rc-virtual-list";
 import { SearchIcon, FilterIcon, StackIcon } from "@primer/octicons-react";
 
-import { LibraryGameCard } from "@renderer/components";
+import { LibraryGameCard, SteamNewsSection } from "@renderer/components";
 import { useLibrary } from "@renderer/hooks";
 import { buildGameDetailsPath } from "@renderer/helpers";
 import type { LibraryGame } from "@types";
@@ -240,7 +240,9 @@ export default function Library() {
           data-library-news-slot
           role="complementary"
           aria-label={t("news")}
-        />
+        >
+          <SteamNewsSection />
+        </div>
 
         <div className="library__content">
           <div ref={listContainerRef} className="library__list-container">

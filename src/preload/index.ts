@@ -208,6 +208,8 @@ contextBridge.exposeInMainWorld("electron", {
   verifyExecutablePathInUse: (executablePath: string) =>
     ipcRenderer.invoke("verifyExecutablePathInUse", executablePath),
   getLibrary: () => ipcRenderer.invoke("getLibrary"),
+  getSteamNews: (language: string) =>
+    ipcRenderer.invoke("getSteamNews", language),
   openGameInstaller: (shop: GameShop, objectId: string) =>
     ipcRenderer.invoke("openGameInstaller", shop, objectId),
   openGameInstallerPath: (shop: GameShop, objectId: string) =>

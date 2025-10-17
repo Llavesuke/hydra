@@ -1,0 +1,300 @@
+@use "../../scss/globals.scss";
+
+.steam-news-section {
+  display: flex;
+  flex-direction: column;
+  gap: calc(globals.$spacing-unit * 2);
+
+  &__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: calc(globals.$spacing-unit * 2);
+
+    @media (max-width: 768px) {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: globals.$spacing-unit;
+    }
+  }
+
+  &__title {
+    margin: 0;
+    font-size: 20px;
+    font-weight: 600;
+    color: globals.$muted-color;
+  }
+
+  &__toggle {
+    padding: calc(globals.$spacing-unit * 1.5) calc(globals.$spacing-unit * 2);
+    background-color: globals.$background-color;
+    border: 1px solid globals.$border-color;
+    border-radius: 4px;
+    color: globals.$muted-color;
+    cursor: pointer;
+    transition: all ease 0.2s;
+    font-size: globals.$body-font-size;
+
+    &:hover {
+      background-color: rgba(255, 255, 255, 0.05);
+      border-color: globals.$brand-teal;
+    }
+
+    &:active {
+      opacity: globals.$active-opacity;
+    }
+  }
+
+  &__loading,
+  &__error,
+  &__empty {
+    padding: calc(globals.$spacing-unit * 3);
+    background-color: globals.$dark-background-color;
+    border-radius: 4px;
+    border: 1px solid globals.$border-color;
+    text-align: center;
+    color: globals.$body-color;
+  }
+
+  &__error {
+    display: flex;
+    flex-direction: column;
+    gap: calc(globals.$spacing-unit * 2);
+    align-items: center;
+
+    p {
+      margin: 0;
+    }
+  }
+
+  &__retry-button {
+    padding: calc(globals.$spacing-unit * 1.5) calc(globals.$spacing-unit * 3);
+    background-color: globals.$brand-teal;
+    border: none;
+    border-radius: 4px;
+    color: white;
+    cursor: pointer;
+    transition: all ease 0.2s;
+    font-size: globals.$body-font-size;
+
+    &:hover {
+      background-color: darken(globals.$brand-teal, 10%);
+    }
+
+    &:active {
+      opacity: globals.$active-opacity;
+    }
+  }
+
+  &__empty {
+    display: flex;
+    flex-direction: column;
+    gap: globals.$spacing-unit;
+
+    &-title {
+      margin: 0;
+      font-size: 16px;
+      font-weight: 600;
+      color: globals.$muted-color;
+    }
+
+    &-description {
+      margin: 0;
+      font-size: globals.$body-font-size;
+      color: globals.$body-color;
+    }
+  }
+
+  &__carousel {
+    position: relative;
+  }
+
+  &__scroll-button {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 2;
+    width: 40px;
+    height: 40px;
+    background-color: rgba(0, 0, 0, 0.8);
+    border: 1px solid globals.$border-color;
+    border-radius: 50%;
+    color: globals.$muted-color;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all ease 0.2s;
+
+    &:hover {
+      background-color: rgba(0, 0, 0, 0.9);
+      border-color: globals.$brand-teal;
+      color: globals.$brand-teal;
+    }
+
+    &:active {
+      opacity: globals.$active-opacity;
+    }
+
+    &--left {
+      left: calc(globals.$spacing-unit * -1);
+    }
+
+    &--right {
+      right: calc(globals.$spacing-unit * -1);
+    }
+
+    @media (max-width: 768px) {
+      display: none;
+    }
+  }
+
+  &__cards-container {
+    display: flex;
+    gap: calc(globals.$spacing-unit * 2);
+    overflow-x: auto;
+    overflow-y: hidden;
+    scroll-behavior: smooth;
+    padding: globals.$spacing-unit 0;
+
+    &::-webkit-scrollbar {
+      height: 8px;
+    }
+
+    &::-webkit-scrollbar-track {
+      background: globals.$dark-background-color;
+      border-radius: 4px;
+    }
+
+    &::-webkit-scrollbar-thumb {
+      background: globals.$border-color;
+      border-radius: 4px;
+
+      &:hover {
+        background: rgba(255, 255, 255, 0.2);
+      }
+    }
+  }
+}
+
+.steam-news-card {
+  flex: 0 0 360px;
+  background-color: globals.$dark-background-color;
+  border: 1px solid globals.$border-color;
+  border-radius: 4px;
+  overflow: hidden;
+  cursor: pointer;
+  transition: all ease 0.2s;
+  display: flex;
+  flex-direction: column;
+
+  &:hover {
+    border-color: globals.$brand-teal;
+    transform: translateY(-4px);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.4);
+  }
+
+  &:active {
+    opacity: globals.$active-opacity;
+  }
+
+  &__image-container {
+    position: relative;
+    width: 100%;
+    height: 180px;
+    overflow: hidden;
+    background-color: globals.$background-color;
+  }
+
+  &__image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  &__image-placeholder {
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(
+      135deg,
+      globals.$background-color 0%,
+      globals.$dark-background-color 100%
+    );
+  }
+
+  &__game-badge {
+    position: absolute;
+    bottom: globals.$spacing-unit;
+    left: globals.$spacing-unit;
+    padding: calc(globals.$spacing-unit * 0.75) calc(globals.$spacing-unit * 1.5);
+    background-color: rgba(0, 0, 0, 0.85);
+    backdrop-filter: blur(4px);
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: 600;
+    color: globals.$muted-color;
+    max-width: calc(100% - calc(globals.$spacing-unit * 2));
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  &__content {
+    display: flex;
+    flex-direction: column;
+    gap: globals.$spacing-unit;
+    padding: calc(globals.$spacing-unit * 2);
+    flex: 1;
+  }
+
+  &__title {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 600;
+    color: globals.$muted-color;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    line-height: 1.4;
+  }
+
+  &__excerpt {
+    margin: 0;
+    font-size: 14px;
+    color: globals.$body-color;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    line-height: 1.5;
+    flex: 1;
+  }
+
+  &__footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: globals.$spacing-unit;
+    margin-top: auto;
+    padding-top: globals.$spacing-unit;
+    border-top: 1px solid globals.$border-color;
+  }
+
+  &__date {
+    font-size: 12px;
+    color: globals.$body-color;
+  }
+
+  &__read-more {
+    font-size: 12px;
+    color: globals.$brand-teal;
+    font-weight: 600;
+  }
+
+  @media (max-width: 768px) {
+    flex: 0 0 300px;
+  }
+}
