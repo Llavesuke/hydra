@@ -162,6 +162,9 @@ declare global {
     ) => Promise<void>;
     verifyExecutablePathInUse: (executablePath: string) => Promise<Game>;
     getLibrary: () => Promise<LibraryGame[]>;
+    getLibraryCategories: (
+      games: Array<{ id: string; shop: GameShop; objectId: string }>
+    ) => Promise<{ [gameId: string]: string[] }>;
     openGameInstaller: (shop: GameShop, objectId: string) => Promise<boolean>;
     openGameInstallerPath: (shop: GameShop, objectId: string) => Promise<void>;
     openGameExecutablePath: (shop: GameShop, objectId: string) => Promise<void>;

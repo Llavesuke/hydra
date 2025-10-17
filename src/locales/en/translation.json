@@ -408,7 +408,21 @@
     "loading": "Loading your library…",
     "empty_title": "Nothing here yet",
     "empty_description": "Try updating your search or toggles to discover games.",
-    "loading_skeleton_label": "Loading library entries"
+    "loading_skeleton_label": "Loading library entries",
+    "sort_by": "Sort by",
+    "sort_title": "Title",
+    "sort_added_date": "Date Added",
+    "sort_playtime": "Playtime",
+    "sort_last_played": "Last Played",
+    "sort_smart": "Smart Suggestions",
+    "quick_filters": "Quick Filters",
+    "filter_favorites": "Favorites",
+    "filter_installed": "Installed",
+    "filter_backlog": "Backlog",
+    "categories": "Categories",
+    "clear_filters": "Clear Filters",
+    "no_categories": "No categories available",
+    "smart_suggestions_tooltip": "Games prioritized by recent downloads and activity"
   },
   "settings": {
     "downloads_path": "Downloads path",

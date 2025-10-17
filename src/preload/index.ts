@@ -208,6 +208,9 @@ contextBridge.exposeInMainWorld("electron", {
   verifyExecutablePathInUse: (executablePath: string) =>
     ipcRenderer.invoke("verifyExecutablePathInUse", executablePath),
   getLibrary: () => ipcRenderer.invoke("getLibrary"),
+  getLibraryCategories: (
+    games: Array<{ id: string; shop: GameShop; objectId: string }>
+  ) => ipcRenderer.invoke("getLibraryCategories", games),
   openGameInstaller: (shop: GameShop, objectId: string) =>
     ipcRenderer.invoke("openGameInstaller", shop, objectId),
   openGameInstallerPath: (shop: GameShop, objectId: string) =>

@@ -3,6 +3,7 @@ import {
   downloadSlice,
   windowSlice,
   librarySlice,
+  libraryFiltersSlice,
   userPreferencesSlice,
   toastSlice,
   userDetailsSlice,
@@ -18,6 +19,7 @@ export const store = configureStore({
   reducer: {
     window: windowSlice.reducer,
     library: librarySlice.reducer,
+    libraryFilters: libraryFiltersSlice.reducer,
     userPreferences: userPreferencesSlice.reducer,
     download: downloadSlice.reducer,
     toast: toastSlice.reducer,

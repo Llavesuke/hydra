@@ -3,10 +3,28 @@ import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import Skeleton, { SkeletonTheme } from "react-loading-skeleton";
 import VirtualList from "rc-virtual-list";
-import { SearchIcon, StackIcon, PlusIcon } from "@primer/octicons-react";
+import {
+  SearchIcon,
+  FilterIcon,
+  XIcon,
+  ChevronDownIcon,
+} from "@primer/octicons-react";
 
-import { GameCard } from "@renderer/components";
-import { useLibrary, useCollections } from "@renderer/hooks";
+import { LibraryGameCard } from "@renderer/components";
+import { useLibrary } from "@renderer/hooks";
+import { useAppDispatch, useAppSelector } from "@renderer/hooks/redux";
+import {
+  setSearchText,
+  toggleCategory,
+  clearCategories,
+  setSortBy,
+  toggleQuickFilter,
+  clearLibraryFilters,
+  selectFilteredAndSortedGames,
+  selectAvailableCategories,
+  type SortBy,
+  type QuickFilter,
+} from "@renderer/features";
 import { buildGameDetailsPath } from "@renderer/helpers";
 import type { LibraryGame } from "@types";
 import { CreateCollectionModal } from "./modals/create-collection-modal";
@@ -14,7 +32,7 @@ import { ManageCollectionsModal } from "./modals/manage-collections-modal";
 
 import "./library.scss";
 
-const CARD_HEIGHT = 180;
+const CARD_HEIGHT = 320;
 const CARD_GAP = 16;
 const ROW_HEIGHT = CARD_HEIGHT + CARD_GAP;
 
@@ -27,19 +45,35 @@ interface LibraryRow {
 export default function Library() {
   const { t } = useTranslation("library");
   const navigate = useNavigate();
+  const dispatch = useAppDispatch();
   const { library, updateLibrary } = useLibrary();
   const { collections, loadCollections } = useCollections();
 
   const listContainerRef = useRef<HTMLDivElement>(null);
+  const searchInputRef = useRef<HTMLInputElement>(null);
+  const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
 
-  const [searchQuery, setSearchQuery] = useState("");
-  const [selectedCollectionId, setSelectedCollectionId] = useState<
-    string | null
-  >(null);
+  const [localSearchText, setLocalSearchText] = useState("");
+  const [showCategoryMenu, setShowCategoryMenu] = useState(false);
+  const [showSortMenu, setShowSortMenu] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [isLoadingCategories, setIsLoadingCategories] = useState(false);
   const [listSize, setListSize] = useState({ width: 0, height: 0 });
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showManageModal, setShowManageModal] = useState(false);
+
+  const categoryMenuRef = useRef<HTMLDivElement>(null);
+  const sortMenuRef = useRef<HTMLDivElement>(null);
+
+  const filteredLibrary = useAppSelector(selectFilteredAndSortedGames);
+  const availableCategories = useAppSelector(selectAvailableCategories);
+  const selectedCategories = useAppSelector(
+    (state) => state.libraryFilters.selectedCategories
+  );
+  const sortBy = useAppSelector((state) => state.libraryFilters.sortBy);
+  const activeQuickFilters = useAppSelector(
+    (state) => state.libraryFilters.activeQuickFilters
+  );
 
   const getColumnsCount = useCallback((width: number) => {
     if (width >= 1600) return 4;
@@ -87,31 +121,117 @@ export default function Library() {
     return collections.find((c) => c.id === selectedCollectionId) || null;
   }, [selectedCollectionId, collections]);
 
-  const filteredLibrary = useMemo(() => {
-    let filtered = library;
+  // Load categories after library is loaded
+  useEffect(() => {
+    if (library.length > 0 && !isLoadingCategories) {
+      setIsLoadingCategories(true);
+      const gamesData = library.map((game) => ({
+        id: game.id,
+        shop: game.shop,
+        objectId: game.objectId,
+      }));
 
-    if (selectedCollection) {
-      if (selectedCollection.isSmartCollection) {
-        if (selectedCollection.id === "favorites") {
-          filtered = filtered.filter((game) => game.favorite);
-        } else if (selectedCollection.id === "installed") {
-          filtered = filtered.filter((game) => game.executablePath);
-        }
-      } else {
-        filtered = filtered.filter((game) =>
-          selectedCollection.gameIds.includes(game.id)
-        );
-      }
+      window.electron
+        .getLibraryCategories(gamesData)
+        .then((categoriesMap) => {
+          // Update library games with categories
+          // This would ideally update the Redux state but for simplicity
+          // we'll handle it through a library refresh pattern
+          Object.keys(categoriesMap).forEach((gameId) => {
+            const game = library.find((g) => g.id === gameId);
+            if (game) {
+              game.categories = categoriesMap[gameId];
+            }
+          });
+        })
+        .catch((err) => {
+          console.error("Failed to load categories:", err);
+        })
+        .finally(() => {
+          setIsLoadingCategories(false);
+        });
     }
+  }, [library.length]);
 
-    if (searchQuery) {
-      filtered = filtered.filter((game) =>
-        game.title.toLowerCase().includes(searchQuery.toLowerCase())
+  useEffect(() => {
+    const onFavoriteToggled = () => {
+      updateLibrary();
+    };
+
+    const onGameRemoved = () => {
+      updateLibrary();
+    };
+
+    const onFilesRemoved = () => {
+      updateLibrary();
+    };
+
+    window.addEventListener(
+      "hydra:game-favorite-toggled",
+      onFavoriteToggled as EventListener
+    );
+    window.addEventListener(
+      "hydra:game-removed-from-library",
+      onGameRemoved as EventListener
+    );
+    window.addEventListener(
+      "hydra:game-files-removed",
+      onFilesRemoved as EventListener
+    );
+
+    return () => {
+      window.removeEventListener(
+        "hydra:game-favorite-toggled",
+        onFavoriteToggled as EventListener
       );
+      window.removeEventListener(
+        "hydra:game-removed-from-library",
+        onGameRemoved as EventListener
+      );
+      window.removeEventListener(
+        "hydra:game-files-removed",
+        onFilesRemoved as EventListener
+      );
+    };
+  }, [updateLibrary]);
+
+  // Debounced search
+  useEffect(() => {
+    if (debounceTimerRef.current) {
+      clearTimeout(debounceTimerRef.current);
     }
 
-    return filtered;
-  }, [library, searchQuery, selectedCollection]);
+    debounceTimerRef.current = setTimeout(() => {
+      dispatch(setSearchText(localSearchText));
+    }, 300);
+
+    return () => {
+      if (debounceTimerRef.current) {
+        clearTimeout(debounceTimerRef.current);
+      }
+    };
+  }, [localSearchText, dispatch]);
+
+  // Close menus on outside click
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        categoryMenuRef.current &&
+        !categoryMenuRef.current.contains(event.target as Node)
+      ) {
+        setShowCategoryMenu(false);
+      }
+      if (
+        sortMenuRef.current &&
+        !sortMenuRef.current.contains(event.target as Node)
+      ) {
+        setShowSortMenu(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   const columnCount = useMemo(() => {
     return Math.max(getColumnsCount(listSize.width), 1);
@@ -147,24 +267,36 @@ export default function Library() {
   );
 
   const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchQuery(event.target.value);
+    setLocalSearchText(event.target.value);
   };
 
-  const handleCollectionSelect = useCallback((collectionId: string | null) => {
-    setSelectedCollectionId(collectionId);
-  }, []);
+  const handleClearSearch = () => {
+    setLocalSearchText("");
+    dispatch(setSearchText(""));
+    searchInputRef.current?.focus();
+  };
 
-  const handleCreateCollection = useCallback(() => {
-    setShowCreateModal(true);
-  }, []);
+  const handleToggleCategory = (category: string) => {
+    dispatch(toggleCategory(category));
+  };
 
-  const handleManageCollections = useCallback(() => {
-    setShowManageModal(true);
-  }, []);
+  const handleClearCategories = () => {
+    dispatch(clearCategories());
+  };
 
-  const handleCollectionCreated = useCallback(() => {
-    loadCollections();
-  }, [loadCollections]);
+  const handleSortChange = (newSortBy: SortBy) => {
+    dispatch(setSortBy(newSortBy));
+    setShowSortMenu(false);
+  };
+
+  const handleQuickFilterToggle = (filter: QuickFilter) => {
+    dispatch(toggleQuickFilter(filter));
+  };
+
+  const handleClearAllFilters = () => {
+    setLocalSearchText("");
+    dispatch(clearLibraryFilters());
+  };
 
   const renderRow = (row: LibraryRow) => (
     <div
@@ -174,10 +306,10 @@ export default function Library() {
       }}
     >
       {row.items.map((game) => (
-        <GameCard
+        <LibraryGameCard
           key={game.id}
           game={game}
-          onClick={() => handleGameClick(game)}
+          onNavigate={() => handleGameClick(game)}
         />
       ))}
       {row.items.length < row.columnCount &&
@@ -192,6 +324,11 @@ export default function Library() {
     </div>
   );
 
+  const hasActiveFilters =
+    localSearchText ||
+    selectedCategories.length > 0 ||
+    activeQuickFilters.length > 0;
+
   const isEmpty = !isLoading && filteredLibrary.length === 0;
   const virtualListHeight = listSize.height || 600;
 
@@ -202,60 +339,172 @@ export default function Library() {
           <div className="library__search-wrapper">
             <SearchIcon size={16} />
             <input
+              ref={searchInputRef}
               type="text"
               className="library__search-input"
               placeholder={t("search_placeholder")}
-              value={searchQuery}
+              value={localSearchText}
               onChange={handleSearchChange}
             />
+            {localSearchText && (
+              <button
+                type="button"
+                className="library__clear-search"
+                onClick={handleClearSearch}
+                aria-label="Clear search"
+              >
+                <XIcon size={16} />
+              </button>
+            )}
           </div>
 
           <div className="library__utility-actions">
-            <div className="library__collection-selector">
-              <select
-                value={selectedCollectionId || "all"}
-                onChange={(e) =>
-                  handleCollectionSelect(
-                    e.target.value === "all" ? null : e.target.value
-                  )
-                }
-                className="library__collection-select"
+            <div className="library__filter-group" ref={sortMenuRef}>
+              <button
+                type="button"
+                className="library__utility-button"
+                onClick={() => setShowSortMenu(!showSortMenu)}
+                aria-label={t("sort_by")}
               >
-                <option value="all">{t("all_games")}</option>
-                <option value="favorites">{t("favorites")}</option>
-                <option value="installed">{t("installed")}</option>
-                {collections
-                  .filter((c) => !c.isSmartCollection)
-                  .map((collection) => (
-                    <option key={collection.id} value={collection.id}>
-                      {collection.name}
-                    </option>
-                  ))}
-              </select>
+                <span>{t("sort_by")}</span>
+                <ChevronDownIcon size={16} />
+              </button>
+
+              {showSortMenu && (
+                <div className="library__dropdown-menu">
+                  <button
+                    type="button"
+                    className={`library__menu-item${sortBy === "default" ? " library__menu-item--active" : ""}`}
+                    onClick={() => handleSortChange("default")}
+                    title={t("smart_suggestions_tooltip")}
+                  >
+                    {t("sort_smart")}
+                  </button>
+                  <button
+                    type="button"
+                    className={`library__menu-item${sortBy === "title" ? " library__menu-item--active" : ""}`}
+                    onClick={() => handleSortChange("title")}
+                  >
+                    {t("sort_title")}
+                  </button>
+                  <button
+                    type="button"
+                    className={`library__menu-item${sortBy === "addedDate" ? " library__menu-item--active" : ""}`}
+                    onClick={() => handleSortChange("addedDate")}
+                  >
+                    {t("sort_added_date")}
+                  </button>
+                  <button
+                    type="button"
+                    className={`library__menu-item${sortBy === "recentPlaytime" ? " library__menu-item--active" : ""}`}
+                    onClick={() => handleSortChange("recentPlaytime")}
+                  >
+                    {t("sort_playtime")}
+                  </button>
+                  <button
+                    type="button"
+                    className={`library__menu-item${sortBy === "lastPlayed" ? " library__menu-item--active" : ""}`}
+                    onClick={() => handleSortChange("lastPlayed")}
+                  >
+                    {t("sort_last_played")}
+                  </button>
+                </div>
+              )}
             </div>
 
-            <button
-              type="button"
-              className="library__utility-button"
-              title={t("create_collection")}
-              aria-label={t("create_collection")}
-              onClick={handleCreateCollection}
-            >
-              <PlusIcon size={16} />
-              <span>{t("create_collection")}</span>
-            </button>
+            <div className="library__filter-group" ref={categoryMenuRef}>
+              <button
+                type="button"
+                className={`library__utility-button${selectedCategories.length > 0 ? " library__utility-button--active" : ""}`}
+                onClick={() => setShowCategoryMenu(!showCategoryMenu)}
+                aria-label={t("categories")}
+              >
+                <FilterIcon size={16} />
+                <span>
+                  {t("categories")}
+                  {selectedCategories.length > 0 &&
+                    ` (${selectedCategories.length})`}
+                </span>
+              </button>
 
+              {showCategoryMenu && (
+                <div className="library__dropdown-menu library__dropdown-menu--scrollable">
+                  {availableCategories.length > 0 ? (
+                    <>
+                      {selectedCategories.length > 0 && (
+                        <>
+                          <button
+                            type="button"
+                            className="library__menu-item library__menu-item--clear"
+                            onClick={handleClearCategories}
+                          >
+                            <XIcon size={14} />
+                            {t("clear_filters")}
+                          </button>
+                          <div className="library__menu-divider" />
+                        </>
+                      )}
+                      {availableCategories.map((category) => (
+                        <button
+                          key={category}
+                          type="button"
+                          className={`library__menu-item library__menu-item--checkbox${selectedCategories.includes(category) ? " library__menu-item--active" : ""}`}
+                          onClick={() => handleToggleCategory(category)}
+                        >
+                          <span className="library__checkbox">
+                            {selectedCategories.includes(category) && "✓"}
+                          </span>
+                          {category}
+                        </button>
+                      ))}
+                    </>
+                  ) : (
+                    <div className="library__menu-item library__menu-item--disabled">
+                      {t("no_categories")}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+
+        <div className="library__quick-filters">
+          <span className="library__quick-filters-label">
+            {t("quick_filters")}:
+          </span>
+          <button
+            type="button"
+            className={`library__chip${activeQuickFilters.includes("favorites") ? " library__chip--active" : ""}`}
+            onClick={() => handleQuickFilterToggle("favorites")}
+          >
+            {t("filter_favorites")}
+          </button>
+          <button
+            type="button"
+            className={`library__chip${activeQuickFilters.includes("installed") ? " library__chip--active" : ""}`}
+            onClick={() => handleQuickFilterToggle("installed")}
+          >
+            {t("filter_installed")}
+          </button>
+          <button
+            type="button"
+            className={`library__chip${activeQuickFilters.includes("backlog") ? " library__chip--active" : ""}`}
+            onClick={() => handleQuickFilterToggle("backlog")}
+          >
+            {t("filter_backlog")}
+          </button>
+
+          {hasActiveFilters && (
             <button
               type="button"
-              className="library__utility-button"
-              title={t("manage_collections")}
-              aria-label={t("manage_collections")}
-              onClick={handleManageCollections}
+              className="library__chip library__chip--clear"
+              onClick={handleClearAllFilters}
             >
-              <StackIcon size={16} />
-              <span>{t("manage_collections")}</span>
+              <XIcon size={14} />
+              {t("clear_filters")}
             </button>
-          </div>
+          )}
         </div>
 
         <div
