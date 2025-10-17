@@ -90,6 +90,35 @@ export const getSteamAppDetails = async (
     });
 };
 
+export const getSteamAppCategories = async (
+  objectId: string,
+  language: string
+): Promise<string[]> => {
+  try {
+    const details = await getSteamAppDetails(objectId, language);
+    
+    if (!details?.genres) {
+      // Fallback to English if no genres found in requested language
+      if (language !== "english") {
+        const englishDetails = await getSteamAppDetails(objectId, "english");
+        if (englishDetails?.genres) {
+          return englishDetails.genres.map((genre) => genre.name);
+        }
+      }
+      return [];
+    }
+
+    return details.genres.map((genre) => genre.name);
+  } catch (err) {
+    const error = err as Error;
+    logger.error("Error on getSteamAppCategories", {
+      message: error?.message,
+      objectId,
+    });
+    return [];
+  }
+};
+
 export const getSteamUsersIds = async () => {
   const steamLocation = await getSteamLocation().catch(() => null);
 

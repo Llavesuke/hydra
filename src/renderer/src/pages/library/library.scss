@@ -63,6 +63,26 @@
     }
   }
 
+  &__clear-search {
+    background: none;
+    border: none;
+    padding: 0;
+    color: globals.$body-color;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: color 0.2s ease;
+
+    &:hover {
+      color: globals.$brand-teal;
+    }
+
+    svg {
+      min-width: 16px;
+    }
+  }
+
   &__utility-actions {
     display: flex;
     gap: globals.$spacing-unit;
@@ -71,6 +91,10 @@
       width: 100%;
       justify-content: stretch;
     }
+  }
+
+  &__filter-group {
+    position: relative;
   }
 
   &__utility-button {
@@ -85,6 +109,7 @@
     cursor: pointer;
     transition: all ease 0.2s;
     font-size: globals.$body-font-size;
+    white-space: nowrap;
 
     &:hover {
       background-color: rgba(255, 255, 255, 0.05);
@@ -98,6 +123,7 @@
     &--active {
       background-color: rgba(22, 177, 149, 0.15);
       border-color: globals.$brand-teal;
+      color: globals.$brand-teal;
     }
 
     svg {
@@ -107,6 +133,158 @@
     @media (max-width: 768px) {
       flex: 1;
       justify-content: center;
+    }
+  }
+
+  &__dropdown-menu {
+    position: absolute;
+    top: calc(100% + 8px);
+    right: 0;
+    min-width: 200px;
+    max-width: 300px;
+    background-color: globals.$dark-background-color;
+    border: 1px solid globals.$border-color;
+    border-radius: 4px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+    z-index: 1000;
+    padding: calc(globals.$spacing-unit * 0.5);
+
+    &--scrollable {
+      max-height: 400px;
+      overflow-y: auto;
+
+      &::-webkit-scrollbar {
+        width: 6px;
+      }
+
+      &::-webkit-scrollbar-track {
+        background: globals.$background-color;
+      }
+
+      &::-webkit-scrollbar-thumb {
+        background: globals.$border-color;
+        border-radius: 3px;
+
+        &:hover {
+          background: rgba(255, 255, 255, 0.2);
+        }
+      }
+    }
+  }
+
+  &__menu-item {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: globals.$spacing-unit;
+    padding: calc(globals.$spacing-unit * 1.25) calc(globals.$spacing-unit * 1.5);
+    background: none;
+    border: none;
+    border-radius: 4px;
+    color: globals.$muted-color;
+    font-size: globals.$body-font-size;
+    cursor: pointer;
+    transition: all ease 0.2s;
+    text-align: left;
+
+    &:hover:not(&--disabled) {
+      background-color: rgba(255, 255, 255, 0.05);
+    }
+
+    &--active {
+      color: globals.$brand-teal;
+      background-color: rgba(22, 177, 149, 0.1);
+    }
+
+    &--clear {
+      color: globals.$brand-teal;
+    }
+
+    &--checkbox {
+      padding-left: calc(globals.$spacing-unit * 1);
+    }
+
+    &--disabled {
+      cursor: default;
+      opacity: 0.5;
+    }
+
+    svg {
+      min-width: 14px;
+    }
+  }
+
+  &__menu-divider {
+    height: 1px;
+    background-color: globals.$border-color;
+    margin: calc(globals.$spacing-unit * 0.5) 0;
+  }
+
+  &__checkbox {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 18px;
+    height: 18px;
+    border: 1px solid globals.$border-color;
+    border-radius: 3px;
+    font-size: 12px;
+    color: globals.$brand-teal;
+    flex-shrink: 0;
+  }
+
+  &__quick-filters {
+    display: flex;
+    align-items: center;
+    gap: globals.$spacing-unit;
+    padding: 0 calc(globals.$spacing-unit * 2);
+    flex-wrap: wrap;
+  }
+
+  &__quick-filters-label {
+    color: globals.$body-color;
+    font-size: globals.$body-font-size;
+    font-weight: 500;
+  }
+
+  &__chip {
+    display: flex;
+    align-items: center;
+    gap: calc(globals.$spacing-unit * 0.5);
+    padding: calc(globals.$spacing-unit * 0.75) calc(globals.$spacing-unit * 1.5);
+    background-color: rgba(255, 255, 255, 0.05);
+    border: 1px solid globals.$border-color;
+    border-radius: 20px;
+    color: globals.$muted-color;
+    font-size: calc(globals.$body-font-size * 0.875);
+    cursor: pointer;
+    transition: all ease 0.2s;
+    white-space: nowrap;
+
+    &:hover {
+      background-color: rgba(255, 255, 255, 0.1);
+      border-color: globals.$brand-teal;
+    }
+
+    &--active {
+      background-color: rgba(22, 177, 149, 0.2);
+      border-color: globals.$brand-teal;
+      color: globals.$brand-teal;
+    }
+
+    &--clear {
+      background-color: rgba(255, 77, 77, 0.1);
+      border-color: rgba(255, 77, 77, 0.3);
+      color: #ff6b6b;
+
+      &:hover {
+        background-color: rgba(255, 77, 77, 0.15);
+        border-color: #ff6b6b;
+      }
+    }
+
+    svg {
+      min-width: 14px;
     }
   }
 
