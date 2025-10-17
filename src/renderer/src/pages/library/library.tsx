@@ -5,14 +5,14 @@ import Skeleton, { SkeletonTheme } from "react-loading-skeleton";
 import VirtualList from "rc-virtual-list";
 import { SearchIcon, FilterIcon, StackIcon } from "@primer/octicons-react";
 
-import { GameCard } from "@renderer/components";
+import { LibraryGameCard } from "@renderer/components";
 import { useLibrary } from "@renderer/hooks";
 import { buildGameDetailsPath } from "@renderer/helpers";
 import type { LibraryGame } from "@types";
 
 import "./library.scss";
 
-const CARD_HEIGHT = 180;
+const CARD_HEIGHT = 320;
 const CARD_GAP = 16;
 const ROW_HEIGHT = CARD_HEIGHT + CARD_GAP;
 
@@ -75,6 +75,48 @@ export default function Library() {
     });
   }, [updateLibrary]);
 
+  useEffect(() => {
+    const onFavoriteToggled = () => {
+      updateLibrary();
+    };
+
+    const onGameRemoved = () => {
+      updateLibrary();
+    };
+
+    const onFilesRemoved = () => {
+      updateLibrary();
+    };
+
+    window.addEventListener(
+      "hydra:game-favorite-toggled",
+      onFavoriteToggled as EventListener
+    );
+    window.addEventListener(
+      "hydra:game-removed-from-library",
+      onGameRemoved as EventListener
+    );
+    window.addEventListener(
+      "hydra:game-files-removed",
+      onFilesRemoved as EventListener
+    );
+
+    return () => {
+      window.removeEventListener(
+        "hydra:game-favorite-toggled",
+        onFavoriteToggled as EventListener
+      );
+      window.removeEventListener(
+        "hydra:game-removed-from-library",
+        onGameRemoved as EventListener
+      );
+      window.removeEventListener(
+        "hydra:game-files-removed",
+        onFilesRemoved as EventListener
+      );
+    };
+  }, [updateLibrary]);
+
   const filteredLibrary = useMemo(() => {
     return library
       .filter((game) => !showCollectionsOnly || game.favorite)
@@ -132,10 +174,10 @@ export default function Library() {
       }}
     >
       {row.items.map((game) => (
-        <GameCard
+        <LibraryGameCard
           key={game.id}
           game={game}
-          onClick={() => handleGameClick(game)}
+          onNavigate={() => handleGameClick(game)}
         />
       ))}
       {row.items.length < row.columnCount &&
