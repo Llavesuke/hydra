@@ -2,16 +2,23 @@ import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { LibraryGame, ShortcutLocation } from "@types";
 import { useDownload, useLibrary, useToast } from "@renderer/hooks";
-import { useNavigate, useLocation } from "react-router-dom";
-import { buildGameDetailsPath } from "@renderer/helpers";
+import { useGameModals } from "@renderer/context";
 import { logger } from "@renderer/logger";
 
-export function useGameActions(game: LibraryGame) {
+export interface UseGameActionsOptions {
+  onOpenDownloadOptions?: () => void;
+  onOpenGameOptions?: () => void;
+  onGameUpdated?: () => void | Promise<void>;
+}
+
+export function useGameActions(
+  game: LibraryGame,
+  options?: UseGameActionsOptions
+) {
   const { t } = useTranslation("game_details");
   const { showSuccessToast, showErrorToast } = useToast();
   const { updateLibrary } = useLibrary();
-  const navigate = useNavigate();
-  const location = useLocation();
+  const { openDownloadOptions, openGameOptions, closeAll } = useGameModals();
   const {
     removeGameInstaller,
     removeGameFromLibrary,
@@ -45,35 +52,53 @@ export function useGameActions(game: LibraryGame) {
     };
   }, [game?.id]);
 
+  const triggerDownloadOptions = () => {
+    if (options?.onOpenDownloadOptions) {
+      options.onOpenDownloadOptions();
+      try {
+        window.dispatchEvent(
+          new CustomEvent("hydra:openRepacks", {
+            detail: {
+              shop: game.shop,
+              objectId: game.objectId,
+              suppressGlobal: true,
+            },
+          })
+        );
+      } catch (e) {
+        void e;
+      }
+      return;
+    }
+
+    openDownloadOptions(game);
+  };
+
+  const triggerGameOptions = () => {
+    if (options?.onOpenGameOptions) {
+      options.onOpenGameOptions();
+      try {
+        window.dispatchEvent(
+          new CustomEvent("hydra:openGameOptions", {
+            detail: {
+              shop: game.shop,
+              objectId: game.objectId,
+              suppressGlobal: true,
+            },
+          })
+        );
+      } catch (e) {
+        void e;
+      }
+      return;
+    }
+
+    openGameOptions(game);
+  };
+
   const handlePlayGame = async () => {
     if (!canPlay) {
-      const path = buildGameDetailsPath({
-        ...game,
-        objectId: game.objectId,
-      });
-      if (location.pathname === path) {
-        try {
-          window.dispatchEvent(
-            new CustomEvent("hydra:openRepacks", {
-              detail: { objectId: game.objectId },
-            })
-          );
-        } catch (e) {
-          void e;
-        }
-      } else {
-        navigate(path, { state: { openRepacks: true } });
-
-        try {
-          window.dispatchEvent(
-            new CustomEvent("hydra:openRepacks", {
-              detail: { objectId: game.objectId },
-            })
-          );
-        } catch (e) {
-          void e;
-        }
-      }
+      triggerDownloadOptions();
       return;
     }
 
@@ -108,7 +133,7 @@ export function useGameActions(game: LibraryGame) {
         await window.electron.addGameToFavorites(game.shop, game.objectId);
         showSuccessToast(t("game_added_to_favorites"));
       }
-      updateLibrary();
+      await updateLibrary();
       try {
         window.dispatchEvent(
           new CustomEvent("hydra:game-favorite-toggled", {
@@ -118,6 +143,8 @@ export function useGameActions(game: LibraryGame) {
       } catch (e) {
         void e;
       }
+
+      await options?.onGameUpdated?.();
     } catch (error) {
       showErrorToast(t("failed_update_favorites"));
       logger.error("Failed to toggle favorite", error);
@@ -170,40 +197,11 @@ export function useGameActions(game: LibraryGame) {
   };
 
   const handleOpenDownloadOptions = () => {
-    const path = buildGameDetailsPath({
-      ...game,
-      objectId: game.objectId,
-    });
-    navigate(path, { state: { openRepacks: true } });
-
-    try {
-      window.dispatchEvent(
-        new CustomEvent("hydra:openRepacks", {
-          detail: { objectId: game.objectId },
-        })
-      );
-    } catch (e) {
-      void e;
-    }
+    triggerDownloadOptions();
   };
 
   const handleOpenGameOptions = () => {
-    const path = buildGameDetailsPath({
-      ...game,
-      objectId: game.objectId,
-    });
-
-    navigate(path, { state: { openGameOptions: true } });
-
-    try {
-      window.dispatchEvent(
-        new CustomEvent("hydra:openGameOptions", {
-          detail: { objectId: game.objectId },
-        })
-      );
-    } catch (e) {
-      void e;
-    }
+    triggerGameOptions();
   };
 
   const handleOpenDownloadLocation = async () => {
@@ -222,7 +220,7 @@ export function useGameActions(game: LibraryGame) {
       }
 
       await removeGameFromLibrary(game.shop, game.objectId);
-      updateLibrary();
+      await updateLibrary();
       showSuccessToast(t("game_removed_from_library"));
       try {
         window.dispatchEvent(
@@ -233,6 +231,9 @@ export function useGameActions(game: LibraryGame) {
       } catch (e) {
         void e;
       }
+
+      await options?.onGameUpdated?.();
+      closeAll();
     } catch (error) {
       showErrorToast(t("failed_remove_from_library"));
       logger.error("Failed to remove from library", error);
@@ -242,7 +243,7 @@ export function useGameActions(game: LibraryGame) {
   const handleRemoveFiles = async () => {
     try {
       await removeGameInstaller(game.shop, game.objectId);
-      updateLibrary();
+      await updateLibrary();
       showSuccessToast(t("files_removed_success"));
       try {
         window.dispatchEvent(
@@ -253,6 +254,8 @@ export function useGameActions(game: LibraryGame) {
       } catch (e) {
         void e;
       }
+
+      await options?.onGameUpdated?.();
     } catch (error) {
       showErrorToast(t("failed_remove_files"));
       logger.error("Failed to remove files", error);

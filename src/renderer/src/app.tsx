@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef } from "react";
 import achievementSound from "@renderer/assets/audio/achievement.wav";
 import { Sidebar, BottomPanel, Header, Toast } from "@renderer/components";
+import { GameModalsProvider } from "@renderer/context";
 
 import {
   useAppDispatch,
@@ -271,7 +272,7 @@ export function App() {
   }, [dispatch]);
 
   return (
-    <>
+    <GameModalsProvider>
       {window.electron.platform === "win32" && (
         <div className="title-bar">
           <h4>
@@ -320,6 +321,6 @@ export function App() {
       </main>
 
       <BottomPanel />
-    </>
+    </GameModalsProvider>
   );
 }

@@ -1,4 +1,4 @@
-import { useContext, useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import {
@@ -15,11 +15,9 @@ import {
   TextField,
   CheckboxField,
 } from "@renderer/components";
-import type { DownloadSource } from "@types";
-import type { GameRepack } from "@types";
+import type { DownloadSource, GameRepack, LibraryGame } from "@types";
 
 import { DownloadSettingsModal } from "./download-settings-modal";
-import { gameDetailsContext } from "@renderer/context";
 import { Downloader } from "@shared";
 import { orderBy } from "lodash-es";
 import { useDate, useFeature } from "@renderer/hooks";
@@ -27,6 +25,8 @@ import "./repacks-modal.scss";
 
 export interface RepacksModalProps {
   visible: boolean;
+  repacks: GameRepack[];
+  game: LibraryGame | null;
   startDownload: (
     repack: GameRepack,
     downloader: Downloader,
@@ -38,6 +38,8 @@ export interface RepacksModalProps {
 
 export function RepacksModal({
   visible,
+  repacks,
+  game,
   startDownload,
   onClose,
 }: Readonly<RepacksModalProps>) {
@@ -53,8 +55,6 @@ export function RepacksModal({
   const [hashesInDebrid, setHashesInDebrid] = useState<Record<string, boolean>>(
     {}
   );
-
-  const { repacks, game } = useContext(gameDetailsContext);
 
   const { t } = useTranslation("game_details");
 
