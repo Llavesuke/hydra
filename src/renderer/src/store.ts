@@ -3,6 +3,7 @@ import {
   downloadSlice,
   windowSlice,
   librarySlice,
+  libraryFiltersSlice,
   userPreferencesSlice,
   toastSlice,
   userDetailsSlice,
@@ -11,12 +12,14 @@ import {
   repacksSlice,
   downloadSourcesSlice,
   catalogueSearchSlice,
+  collectionsSlice,
 } from "@renderer/features";
 
 export const store = configureStore({
   reducer: {
     window: windowSlice.reducer,
     library: librarySlice.reducer,
+    libraryFilters: libraryFiltersSlice.reducer,
     userPreferences: userPreferencesSlice.reducer,
     download: downloadSlice.reducer,
     toast: toastSlice.reducer,
@@ -26,6 +29,7 @@ export const store = configureStore({
     repacks: repacksSlice.reducer,
     downloadSources: downloadSourcesSlice.reducer,
     catalogueSearch: catalogueSearchSlice.reducer,
+    collections: collectionsSlice.reducer,
   },
 });
 

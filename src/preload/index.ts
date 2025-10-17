@@ -208,8 +208,9 @@ contextBridge.exposeInMainWorld("electron", {
   verifyExecutablePathInUse: (executablePath: string) =>
     ipcRenderer.invoke("verifyExecutablePathInUse", executablePath),
   getLibrary: () => ipcRenderer.invoke("getLibrary"),
-  getSteamNews: (language: string) =>
-    ipcRenderer.invoke("getSteamNews", language),
+  getLibraryCategories: (
+    games: Array<{ id: string; shop: GameShop; objectId: string }>
+  ) => ipcRenderer.invoke("getLibraryCategories", games),
   openGameInstaller: (shop: GameShop, objectId: string) =>
     ipcRenderer.invoke("openGameInstaller", shop, objectId),
   openGameInstallerPath: (shop: GameShop, objectId: string) =>
@@ -596,4 +597,17 @@ contextBridge.exposeInMainWorld("electron", {
   },
   closeEditorWindow: (themeId?: string) =>
     ipcRenderer.invoke("closeEditorWindow", themeId),
+
+  /* Collections */
+  getCollections: () => ipcRenderer.invoke("getCollections"),
+  createCollection: (name: string) =>
+    ipcRenderer.invoke("createCollection", name),
+  renameCollection: (collectionId: string, newName: string) =>
+    ipcRenderer.invoke("renameCollection", collectionId, newName),
+  deleteCollection: (collectionId: string) =>
+    ipcRenderer.invoke("deleteCollection", collectionId),
+  addGameToCollection: (collectionId: string, gameId: string) =>
+    ipcRenderer.invoke("addGameToCollection", collectionId, gameId),
+  removeGameFromCollection: (collectionId: string, gameId: string) =>
+    ipcRenderer.invoke("removeGameFromCollection", collectionId, gameId),
 });

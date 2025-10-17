@@ -33,7 +33,7 @@ import type {
   DownloadSource,
   DownloadSourceValidationResult,
   GameRepack,
-  SteamNewsEntry,
+  LibraryCollection,
 } from "@types";
 import type { AxiosProgressEvent } from "axios";
 
@@ -162,7 +162,9 @@ declare global {
     ) => Promise<void>;
     verifyExecutablePathInUse: (executablePath: string) => Promise<Game>;
     getLibrary: () => Promise<LibraryGame[]>;
-    getSteamNews: (language: string) => Promise<SteamNewsEntry[]>;
+    getLibraryCategories: (
+      games: Array<{ id: string; shop: GameShop; objectId: string }>
+    ) => Promise<{ [gameId: string]: string[] }>;
     openGameInstaller: (shop: GameShop, objectId: string) => Promise<boolean>;
     openGameInstallerPath: (shop: GameShop, objectId: string) => Promise<void>;
     openGameExecutablePath: (shop: GameShop, objectId: string) => Promise<void>;
@@ -426,6 +428,23 @@ declare global {
     openEditorWindow: (themeId: string) => Promise<void>;
     onCustomThemeUpdated: (cb: () => void) => () => Electron.IpcRenderer;
     closeEditorWindow: (themeId?: string) => Promise<void>;
+
+    /* Collections */
+    getCollections: () => Promise<LibraryCollection[]>;
+    createCollection: (name: string) => Promise<LibraryCollection>;
+    renameCollection: (
+      collectionId: string,
+      newName: string
+    ) => Promise<LibraryCollection>;
+    deleteCollection: (collectionId: string) => Promise<void>;
+    addGameToCollection: (
+      collectionId: string,
+      gameId: string
+    ) => Promise<LibraryCollection>;
+    removeGameFromCollection: (
+      collectionId: string,
+      gameId: string
+    ) => Promise<LibraryCollection>;
   }
 
   interface Window {
