@@ -125,8 +125,25 @@ export function LibraryGameCard({ game, onNavigate }: LibraryGameCardProps) {
 
   const imageUrl = game.coverImageUrl || game.libraryImageUrl || game.iconUrl;
 
+  const handleCardClick = () => {
+    if (onNavigate) onNavigate();
+  };
+
+  const handleCardKeyDown = (e: React.KeyboardEvent) => {
+    if ((e.key === "Enter" || e.key === " ") && onNavigate) {
+      e.preventDefault();
+      onNavigate();
+    }
+  };
+
   return (
-    <div className="library-game-card" onClick={onNavigate}>
+    <div
+      className="library-game-card"
+      onClick={handleCardClick}
+      onKeyDown={handleCardKeyDown}
+      role="button"
+      tabIndex={0}
+    >
       <div className="library-game-card__image-container">
         {imageUrl && (
           <img
