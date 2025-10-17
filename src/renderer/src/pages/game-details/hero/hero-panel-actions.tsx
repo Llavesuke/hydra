@@ -13,8 +13,155 @@ import { useLibrary, useToast, useUserDetails } from "@renderer/hooks";
 import { useContext, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { gameDetailsContext } from "@renderer/context";
+import type { GameRepack, LibraryGame, UserDetails } from "@types";
 
 import "./hero-panel-actions.scss";
+
+interface HeroPanelGameActionsProps {
+  game: LibraryGame;
+  repacks: GameRepack[];
+  userDetails: UserDetails | null;
+  onToggleGamePinned: () => Promise<void>;
+  onOpenGameOptions: () => void;
+  onOpenDownloadOptions: () => void;
+  updateGame: () => Promise<void>;
+  toggleLibraryGameDisabled: boolean;
+  setToggleLibraryGameDisabled: React.Dispatch<
+    React.SetStateAction<boolean>
+  >;
+}
+
+function HeroPanelGameActions({
+  game,
+  repacks,
+  userDetails,
+  onToggleGamePinned,
+  onOpenGameOptions,
+  onOpenDownloadOptions,
+  updateGame,
+  toggleLibraryGameDisabled,
+  setToggleLibraryGameDisabled,
+}: Readonly<HeroPanelGameActionsProps>) {
+  const { t } = useTranslation("game_details");
+
+  const {
+    canPlay,
+    isDeleting,
+    isGameDownloading,
+    isGameRunning,
+    handlePlayGame,
+    handleCloseGame,
+    handleToggleFavorite,
+    handleOpenDownloadOptions,
+    handleOpenGameOptions,
+  } = useGameActions(game, {
+    onOpenDownloadOptions,
+    onOpenGameOptions,
+    onGameUpdated: updateGame,
+  });
+
+  const disableActions = isDeleting || toggleLibraryGameDisabled;
+
+  const handleFavoriteClick = async () => {
+    setToggleLibraryGameDisabled(true);
+
+    try {
+      await handleToggleFavorite();
+    } finally {
+      setToggleLibraryGameDisabled(false);
+    }
+  };
+
+  const renderPrimaryAction = () => {
+    if (isGameRunning) {
+      return (
+        <Button
+          onClick={() => {
+            void handleCloseGame();
+          }}
+          theme="outline"
+          disabled={disableActions}
+          className="hero-panel-actions__action"
+        >
+          {t("close")}
+        </Button>
+      );
+    }
+
+    if (canPlay) {
+      return (
+        <Button
+          onClick={() => {
+            void handlePlayGame();
+          }}
+          theme="outline"
+          disabled={disableActions}
+          className="hero-panel-actions__action"
+        >
+          <PlayIcon />
+          {t("play")}
+        </Button>
+      );
+    }
+
+    const downloadDisabled =
+      disableActions || isGameDownloading || repacks.length === 0;
+
+    return (
+      <Button
+        onClick={handleOpenDownloadOptions}
+        theme="outline"
+        disabled={downloadDisabled}
+        className={`hero-panel-actions__action ${
+          repacks.length === 0 ? "hero-panel-actions__action--disabled" : ""
+        }`}
+      >
+        <DownloadIcon />
+        {t("download")}
+      </Button>
+    );
+  };
+
+  return (
+    <div className="hero-panel-actions__container">
+      {renderPrimaryAction()}
+      <div className="hero-panel-actions__separator" />
+      <Button
+        onClick={() => {
+          void handleFavoriteClick();
+        }}
+        theme="outline"
+        disabled={disableActions}
+        className="hero-panel-actions__action"
+      >
+        {game.favorite ? <HeartFillIcon /> : <HeartIcon />}
+      </Button>
+
+      {userDetails && game.shop !== "custom" && (
+        <Button
+          onClick={() => {
+            void onToggleGamePinned();
+          }}
+          theme="outline"
+          disabled={disableActions}
+          className="hero-panel-actions__action"
+        >
+          {game.isPinned ? <PinSlashIcon /> : <PinIcon />}
+        </Button>
+      )}
+
+      <Button
+        onClick={handleOpenGameOptions}
+        theme="outline"
+        disabled={disableActions}
+        className="hero-panel-actions__action"
+      >
+        <GearIcon />
+        {t("options")}
+      </Button>
+    </div>
+  );
+}
 
 export function HeroPanelActions() {
   const [toggleLibraryGameDisabled, setToggleLibraryGameDisabled] =
@@ -136,6 +283,7 @@ export function HeroPanelActions() {
     <Button
       onClick={() => setShowRepacksModal(true)}
       theme="outline"
+      disabled={toggleLibraryGameDisabled}
       className="hero-panel-actions__action"
     >
       {t("open_download_options")}
@@ -155,119 +303,17 @@ export function HeroPanelActions() {
     return addGameToLibraryButton;
   }
 
-  const {
-    canPlay,
-    isDeleting,
-    isGameDownloading,
-    isGameRunning,
-    handlePlayGame,
-    handleCloseGame,
-    handleToggleFavorite,
-    handleOpenDownloadOptions,
-    handleOpenGameOptions,
-  } = useGameActions(game, {
-    onOpenDownloadOptions: () => setShowRepacksModal(true),
-    onOpenGameOptions: () => setShowGameOptionsModal(true),
-    onGameUpdated: updateGame,
-  });
-
-  const disableActions = isDeleting || toggleLibraryGameDisabled;
-
-  const handleFavoriteClick = async () => {
-    setToggleLibraryGameDisabled(true);
-
-    try {
-      await handleToggleFavorite();
-    } finally {
-      setToggleLibraryGameDisabled(false);
-    }
-  };
-
-  const renderPrimaryAction = () => {
-    if (isGameRunning) {
-      return (
-        <Button
-          onClick={() => {
-            void handleCloseGame();
-          }}
-          theme="outline"
-          disabled={disableActions}
-          className="hero-panel-actions__action"
-        >
-          {t("close")}
-        </Button>
-      );
-    }
-
-    if (canPlay) {
-      return (
-        <Button
-          onClick={() => {
-            void handlePlayGame();
-          }}
-          theme="outline"
-          disabled={disableActions}
-          className="hero-panel-actions__action"
-        >
-          <PlayIcon />
-          {t("play")}
-        </Button>
-      );
-    }
-
-    const downloadDisabled =
-      disableActions || isGameDownloading || repacks.length === 0;
-
-    return (
-      <Button
-        onClick={handleOpenDownloadOptions}
-        theme="outline"
-        disabled={downloadDisabled}
-        className={`hero-panel-actions__action ${
-          repacks.length === 0 ? "hero-panel-actions__action--disabled" : ""
-        }`}
-      >
-        <DownloadIcon />
-        {t("download")}
-      </Button>
-    );
-  };
-
   return (
-    <div className="hero-panel-actions__container">
-      {renderPrimaryAction()}
-      <div className="hero-panel-actions__separator" />
-      <Button
-        onClick={() => {
-          void handleFavoriteClick();
-        }}
-        theme="outline"
-        disabled={disableActions}
-        className="hero-panel-actions__action"
-      >
-        {game.favorite ? <HeartFillIcon /> : <HeartIcon />}
-      </Button>
-
-      {userDetails && game.shop !== "custom" && (
-        <Button
-          onClick={toggleGamePinned}
-          theme="outline"
-          disabled={disableActions}
-          className="hero-panel-actions__action"
-        >
-          {game.isPinned ? <PinSlashIcon /> : <PinIcon />}
-        </Button>
-      )}
-
-      <Button
-        onClick={handleOpenGameOptions}
-        theme="outline"
-        disabled={disableActions}
-        className="hero-panel-actions__action"
-      >
-        <GearIcon />
-        {t("options")}
-      </Button>
-    </div>
+    <HeroPanelGameActions
+      game={game}
+      repacks={repacks}
+      userDetails={userDetails}
+      onToggleGamePinned={toggleGamePinned}
+      onOpenGameOptions={() => setShowGameOptionsModal(true)}
+      onOpenDownloadOptions={() => setShowRepacksModal(true)}
+      updateGame={updateGame}
+      toggleLibraryGameDisabled={toggleLibraryGameDisabled}
+      setToggleLibraryGameDisabled={setToggleLibraryGameDisabled}
+    />
   );
 }

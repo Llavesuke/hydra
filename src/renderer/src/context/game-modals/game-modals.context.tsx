@@ -8,7 +8,10 @@ import {
 } from "react";
 import { Downloader, getDownloadersForUri } from "@shared";
 import type { GameRepack, LibraryGame, UserAchievement } from "@types";
-import { GameOptionsModal, RepacksModal } from "@renderer/pages/game-details/modals";
+import {
+  GameOptionsModal,
+  RepacksModal,
+} from "@renderer/pages/game-details/modals";
 import {
   useAppSelector,
   useDownload,
@@ -42,7 +45,9 @@ export function GameModalsProvider({ children }: GameModalsProviderProps) {
   const [isGameOptionsVisible, setIsGameOptionsVisible] = useState(false);
   const [isRepacksVisible, setIsRepacksVisible] = useState(false);
 
-  const userPreferences = useAppSelector((state) => state.userPreferences.value);
+  const userPreferences = useAppSelector(
+    (state) => state.userPreferences.value
+  );
 
   const { getRepacksForObjectId } = useRepacks();
   const { startDownload } = useDownload();
@@ -132,11 +137,14 @@ export function GameModalsProvider({ children }: GameModalsProviderProps) {
     [fetchGameDetails]
   );
 
-  const selectRepackUri = useCallback((repack: GameRepack, downloader: Downloader) => {
-    return repack.uris.find((uri) =>
-      getDownloadersForUri(uri).includes(downloader)
-    )!;
-  }, []);
+  const selectRepackUri = useCallback(
+    (repack: GameRepack, downloader: Downloader) => {
+      return repack.uris.find((uri) =>
+        getDownloadersForUri(uri).includes(downloader)
+      )!;
+    },
+    []
+  );
 
   const handleStartDownload = useCallback(
     async (
