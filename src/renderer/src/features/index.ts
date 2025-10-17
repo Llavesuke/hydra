@@ -10,3 +10,4 @@ export * from "./subscription-slice";
 export * from "./repacks-slice";
 export * from "./download-sources-slice";
 export * from "./catalogue-search";
+export * from "./collections-slice";

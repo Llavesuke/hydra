@@ -597,4 +597,17 @@ contextBridge.exposeInMainWorld("electron", {
   },
   closeEditorWindow: (themeId?: string) =>
     ipcRenderer.invoke("closeEditorWindow", themeId),
+
+  /* Collections */
+  getCollections: () => ipcRenderer.invoke("getCollections"),
+  createCollection: (name: string) =>
+    ipcRenderer.invoke("createCollection", name),
+  renameCollection: (collectionId: string, newName: string) =>
+    ipcRenderer.invoke("renameCollection", collectionId, newName),
+  deleteCollection: (collectionId: string) =>
+    ipcRenderer.invoke("deleteCollection", collectionId),
+  addGameToCollection: (collectionId: string, gameId: string) =>
+    ipcRenderer.invoke("addGameToCollection", collectionId, gameId),
+  removeGameFromCollection: (collectionId: string, gameId: string) =>
+    ipcRenderer.invoke("removeGameFromCollection", collectionId, gameId),
 });

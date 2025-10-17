@@ -34,6 +34,11 @@ export const loadState = async () => {
 
   await import("./events");
 
+  const { initializeSmartCollections } = await import(
+    "./events/collections/initialize-smart-collections"
+  );
+  await initializeSmartCollections();
+
   if (process.platform !== "darwin") {
     Aria2.spawn();
   }

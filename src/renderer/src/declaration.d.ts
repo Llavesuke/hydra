@@ -33,6 +33,7 @@ import type {
   DownloadSource,
   DownloadSourceValidationResult,
   GameRepack,
+  LibraryCollection,
 } from "@types";
 import type { AxiosProgressEvent } from "axios";
 
@@ -427,6 +428,23 @@ declare global {
     openEditorWindow: (themeId: string) => Promise<void>;
     onCustomThemeUpdated: (cb: () => void) => () => Electron.IpcRenderer;
     closeEditorWindow: (themeId?: string) => Promise<void>;
+
+    /* Collections */
+    getCollections: () => Promise<LibraryCollection[]>;
+    createCollection: (name: string) => Promise<LibraryCollection>;
+    renameCollection: (
+      collectionId: string,
+      newName: string
+    ) => Promise<LibraryCollection>;
+    deleteCollection: (collectionId: string) => Promise<void>;
+    addGameToCollection: (
+      collectionId: string,
+      gameId: string
+    ) => Promise<LibraryCollection>;
+    removeGameFromCollection: (
+      collectionId: string,
+      gameId: string
+    ) => Promise<LibraryCollection>;
   }
 
   interface Window {

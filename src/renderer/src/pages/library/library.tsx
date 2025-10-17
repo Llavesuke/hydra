@@ -27,6 +27,8 @@ import {
 } from "@renderer/features";
 import { buildGameDetailsPath } from "@renderer/helpers";
 import type { LibraryGame } from "@types";
+import { CreateCollectionModal } from "./modals/create-collection-modal";
+import { ManageCollectionsModal } from "./modals/manage-collections-modal";
 
 import "./library.scss";
 
@@ -45,6 +47,7 @@ export default function Library() {
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
   const { library, updateLibrary } = useLibrary();
+  const { collections, loadCollections } = useCollections();
 
   const listContainerRef = useRef<HTMLDivElement>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
@@ -56,6 +59,8 @@ export default function Library() {
   const [isLoading, setIsLoading] = useState(true);
   const [isLoadingCategories, setIsLoadingCategories] = useState(false);
   const [listSize, setListSize] = useState({ width: 0, height: 0 });
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [showManageModal, setShowManageModal] = useState(false);
 
   const categoryMenuRef = useRef<HTMLDivElement>(null);
   const sortMenuRef = useRef<HTMLDivElement>(null);
@@ -106,10 +111,15 @@ export default function Library() {
 
   useEffect(() => {
     setIsLoading(true);
-    updateLibrary().finally(() => {
+    Promise.all([updateLibrary(), loadCollections()]).finally(() => {
       setIsLoading(false);
     });
-  }, [updateLibrary]);
+  }, [updateLibrary, loadCollections]);
+
+  const selectedCollection = useMemo(() => {
+    if (!selectedCollectionId) return null;
+    return collections.find((c) => c.id === selectedCollectionId) || null;
+  }, [selectedCollectionId, collections]);
 
   // Load categories after library is loaded
   useEffect(() => {
@@ -530,6 +540,17 @@ export default function Library() {
             ) : null}
           </div>
         </div>
+
+        <CreateCollectionModal
+          visible={showCreateModal}
+          onClose={() => setShowCreateModal(false)}
+          onCollectionCreated={handleCollectionCreated}
+        />
+
+        <ManageCollectionsModal
+          visible={showManageModal}
+          onClose={() => setShowManageModal(false)}
+        />
       </section>
     </SkeletonTheme>
   );

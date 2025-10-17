@@ -101,6 +101,12 @@ import "./themes/close-editor-window";
 import "./themes/toggle-custom-theme";
 import "./download-sources/remove-download-source";
 import "./download-sources/get-download-sources";
+import "./collections/get-collections";
+import "./collections/create-collection";
+import "./collections/rename-collection";
+import "./collections/delete-collection";
+import "./collections/add-game-to-collection";
+import "./collections/remove-game-from-collection";
 import { isPortableVersion } from "@main/helpers";
 
 ipcMain.handle("ping", () => "pong");

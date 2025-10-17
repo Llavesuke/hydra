@@ -19,4 +19,6 @@ export const levelKeys = {
   rpcPassword: "rpcPassword",
   downloadSources: "downloadSources",
   repacks: "repacks",
+  collections: "collections",
+  collection: (id: string) => id,
 };
