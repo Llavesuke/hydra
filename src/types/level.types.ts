@@ -126,3 +126,12 @@ export interface ScreenState {
   width: number;
   isMaximized: boolean;
 }
+
+export interface LibraryCollection {
+  id: string;
+  name: string;
+  gameIds: string[];
+  isSmartCollection: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+}

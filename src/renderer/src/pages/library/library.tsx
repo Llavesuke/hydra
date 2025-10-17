@@ -3,12 +3,14 @@ import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import Skeleton, { SkeletonTheme } from "react-loading-skeleton";
 import VirtualList from "rc-virtual-list";
-import { SearchIcon, FilterIcon, StackIcon } from "@primer/octicons-react";
+import { SearchIcon, StackIcon, PlusIcon } from "@primer/octicons-react";
 
 import { GameCard } from "@renderer/components";
-import { useLibrary } from "@renderer/hooks";
+import { useLibrary, useCollections } from "@renderer/hooks";
 import { buildGameDetailsPath } from "@renderer/helpers";
 import type { LibraryGame } from "@types";
+import { CreateCollectionModal } from "./modals/create-collection-modal";
+import { ManageCollectionsModal } from "./modals/manage-collections-modal";
 
 import "./library.scss";
 
@@ -26,13 +28,18 @@ export default function Library() {
   const { t } = useTranslation("library");
   const navigate = useNavigate();
   const { library, updateLibrary } = useLibrary();
+  const { collections, loadCollections } = useCollections();
 
   const listContainerRef = useRef<HTMLDivElement>(null);
 
   const [searchQuery, setSearchQuery] = useState("");
-  const [showCollectionsOnly, setShowCollectionsOnly] = useState(false);
+  const [selectedCollectionId, setSelectedCollectionId] = useState<
+    string | null
+  >(null);
   const [isLoading, setIsLoading] = useState(true);
   const [listSize, setListSize] = useState({ width: 0, height: 0 });
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [showManageModal, setShowManageModal] = useState(false);
 
   const getColumnsCount = useCallback((width: number) => {
     if (width >= 1600) return 4;
@@ -70,18 +77,41 @@ export default function Library() {
 
   useEffect(() => {
     setIsLoading(true);
-    updateLibrary().finally(() => {
+    Promise.all([updateLibrary(), loadCollections()]).finally(() => {
       setIsLoading(false);
     });
-  }, [updateLibrary]);
+  }, [updateLibrary, loadCollections]);
+
+  const selectedCollection = useMemo(() => {
+    if (!selectedCollectionId) return null;
+    return collections.find((c) => c.id === selectedCollectionId) || null;
+  }, [selectedCollectionId, collections]);
 
   const filteredLibrary = useMemo(() => {
-    return library
-      .filter((game) => !showCollectionsOnly || game.favorite)
-      .filter((game) =>
+    let filtered = library;
+
+    if (selectedCollection) {
+      if (selectedCollection.isSmartCollection) {
+        if (selectedCollection.id === "favorites") {
+          filtered = filtered.filter((game) => game.favorite);
+        } else if (selectedCollection.id === "installed") {
+          filtered = filtered.filter((game) => game.executablePath);
+        }
+      } else {
+        filtered = filtered.filter((game) =>
+          selectedCollection.gameIds.includes(game.id)
+        );
+      }
+    }
+
+    if (searchQuery) {
+      filtered = filtered.filter((game) =>
         game.title.toLowerCase().includes(searchQuery.toLowerCase())
       );
-  }, [library, searchQuery, showCollectionsOnly]);
+    }
+
+    return filtered;
+  }, [library, searchQuery, selectedCollection]);
 
   const columnCount = useMemo(() => {
     return Math.max(getColumnsCount(listSize.width), 1);
@@ -120,9 +150,24 @@ export default function Library() {
     setSearchQuery(event.target.value);
   };
 
-  const handleToggleCollections = () => {
-    setShowCollectionsOnly((prev) => !prev);
-  };
+  const handleCollectionSelect = useCallback(
+    (collectionId: string | null) => {
+      setSelectedCollectionId(collectionId);
+    },
+    []
+  );
+
+  const handleCreateCollection = useCallback(() => {
+    setShowCreateModal(true);
+  }, []);
+
+  const handleManageCollections = useCallback(() => {
+    setShowManageModal(true);
+  }, []);
+
+  const handleCollectionCreated = useCallback(() => {
+    loadCollections();
+  }, [loadCollections]);
 
   const renderRow = (row: LibraryRow) => (
     <div
@@ -169,26 +214,49 @@ export default function Library() {
           </div>
 
           <div className="library__utility-actions">
+            <div className="library__collection-selector">
+              <select
+                value={selectedCollectionId || "all"}
+                onChange={(e) =>
+                  handleCollectionSelect(
+                    e.target.value === "all" ? null : e.target.value
+                  )
+                }
+                className="library__collection-select"
+              >
+                <option value="all">{t("all_games")}</option>
+                <option value="favorites">{t("favorites")}</option>
+                <option value="installed">{t("installed")}</option>
+                {collections
+                  .filter((c) => !c.isSmartCollection)
+                  .map((collection) => (
+                    <option key={collection.id} value={collection.id}>
+                      {collection.name}
+                    </option>
+                  ))}
+              </select>
+            </div>
+
             <button
               type="button"
               className="library__utility-button"
-              title={t("filters")}
-              aria-label={t("filters")}
+              title={t("create_collection")}
+              aria-label={t("create_collection")}
+              onClick={handleCreateCollection}
             >
-              <FilterIcon size={16} />
-              <span>{t("filters")}</span>
+              <PlusIcon size={16} />
+              <span>{t("create_collection")}</span>
             </button>
 
             <button
               type="button"
-              className={`library__utility-button${showCollectionsOnly ? " library__utility-button--active" : ""}`}
-              title={t("collections")}
-              aria-pressed={showCollectionsOnly}
-              aria-label={t("collections")}
-              onClick={handleToggleCollections}
+              className="library__utility-button"
+              title={t("manage_collections")}
+              aria-label={t("manage_collections")}
+              onClick={handleManageCollections}
             >
               <StackIcon size={16} />
-              <span>{t("collections")}</span>
+              <span>{t("manage_collections")}</span>
             </button>
           </div>
         </div>
@@ -226,6 +294,17 @@ export default function Library() {
             ) : null}
           </div>
         </div>
+
+        <CreateCollectionModal
+          visible={showCreateModal}
+          onClose={() => setShowCreateModal(false)}
+          onCollectionCreated={handleCollectionCreated}
+        />
+
+        <ManageCollectionsModal
+          visible={showManageModal}
+          onClose={() => setShowManageModal(false)}
+        />
       </section>
     </SkeletonTheme>
   );

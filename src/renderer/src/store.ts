@@ -11,6 +11,7 @@ import {
   repacksSlice,
   downloadSourcesSlice,
   catalogueSearchSlice,
+  collectionsSlice,
 } from "@renderer/features";
 
 export const store = configureStore({
@@ -26,6 +27,7 @@ export const store = configureStore({
     repacks: repacksSlice.reducer,
     downloadSources: downloadSourcesSlice.reducer,
     catalogueSearch: catalogueSearchSlice.reducer,
+    collections: collectionsSlice.reducer,
   },
 });
 
