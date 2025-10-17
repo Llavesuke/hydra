@@ -226,7 +226,8 @@
     position: absolute;
     bottom: globals.$spacing-unit;
     left: globals.$spacing-unit;
-    padding: calc(globals.$spacing-unit * 0.75) calc(globals.$spacing-unit * 1.5);
+    padding: calc(globals.$spacing-unit * 0.75)
+      calc(globals.$spacing-unit * 1.5);
     background-color: rgba(0, 0, 0, 0.85);
     backdrop-filter: blur(4px);
     border-radius: 4px;

@@ -1,5 +1,10 @@
 import { formatDate, getDateLocale } from "@shared";
-import { format, formatDistance, formatDistanceToNow, subMilliseconds } from "date-fns";
+import {
+  format,
+  formatDistance,
+  formatDistanceToNow,
+  subMilliseconds,
+} from "date-fns";
 import type { FormatDistanceOptions } from "date-fns";
 import { useTranslation } from "react-i18next";
 

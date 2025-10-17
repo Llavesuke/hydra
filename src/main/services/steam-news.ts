@@ -173,6 +173,7 @@ export const getSteamNewsForLibrary = async (
       .sort((a, b) => b.relevanceScore - a.relevanceScore)
       .slice(0, MAX_GAMES_WITH_NEWS)
       .map((entry) => {
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         const { relevanceScore, ...rest } = entry;
         return rest;
       });

@@ -20,7 +20,18 @@ const NewsCard = ({ entry, newsItem }: NewsCardProps) => {
   };
 
   return (
-    <div className="steam-news-card" onClick={handleClick}>
+    <div
+      className="steam-news-card"
+      onClick={handleClick}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          handleClick();
+        }
+      }}
+      role="button"
+      tabIndex={0}
+    >
       <div className="steam-news-card__image-container">
         {entry.libraryImageUrl ? (
           <img
