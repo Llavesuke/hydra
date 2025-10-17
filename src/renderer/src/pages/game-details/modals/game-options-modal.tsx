@@ -1,8 +1,12 @@
-import { useContext, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Button, CheckboxField, Modal, TextField } from "@renderer/components";
-import type { LibraryGame, ShortcutLocation } from "@types";
-import { gameDetailsContext } from "@renderer/context";
+import type {
+  GameRepack,
+  LibraryGame,
+  ShortcutLocation,
+  UserAchievement,
+} from "@types";
 import { DeleteGameModal } from "@renderer/pages/downloads/delete-game-modal";
 import { useDownload, useToast, useUserDetails } from "@renderer/hooks";
 import { RemoveGameFromLibraryModal } from "./remove-from-library-modal";
@@ -17,27 +21,29 @@ import { logger } from "@renderer/logger";
 export interface GameOptionsModalProps {
   visible: boolean;
   game: LibraryGame;
+  repacks: GameRepack[];
+  achievements: UserAchievement[] | null;
   onClose: () => void;
   onNavigateHome?: () => void;
+  updateGame: () => Promise<void>;
+  selectGameExecutable: () => Promise<string | null>;
+  onOpenDownloadOptions: () => void;
 }
 
 export function GameOptionsModal({
   visible,
   game,
+  repacks,
+  achievements,
   onClose,
   onNavigateHome,
+  updateGame,
+  selectGameExecutable,
+  onOpenDownloadOptions,
 }: Readonly<GameOptionsModalProps>) {
   const { t } = useTranslation("game_details");
 
   const { showSuccessToast, showErrorToast } = useToast();
-
-  const {
-    updateGame,
-    setShowRepacksModal,
-    repacks,
-    selectGameExecutable,
-    achievements,
-  } = useContext(gameDetailsContext);
 
   const { hasActiveSubscription } = useUserDetails();
 
@@ -463,7 +469,7 @@ export function GameOptionsModal({
 
               <div className="game-options-modal__row">
                 <Button
-                  onClick={() => setShowRepacksModal(true)}
+                  onClick={onOpenDownloadOptions}
                   theme="outline"
                   disabled={deleting || isGameDownloading || !repacks.length}
                 >

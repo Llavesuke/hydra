@@ -87,6 +87,9 @@ export default function GameDetails() {
           game,
           gameTitle,
           shop,
+          repacks,
+          achievements,
+          selectGameExecutable,
           showRepacksModal,
           showGameOptionsModal,
           hasNSFWContentBlocked,
@@ -154,6 +157,8 @@ export default function GameDetails() {
 
                 <RepacksModal
                   visible={showRepacksModal}
+                  repacks={repacks}
+                  game={game}
                   startDownload={handleStartDownload}
                   onClose={() => setShowRepacksModal(false)}
                 />
@@ -175,6 +180,11 @@ export default function GameDetails() {
                   <GameOptionsModal
                     visible={showGameOptionsModal}
                     game={game}
+                    repacks={repacks}
+                    achievements={achievements}
+                    updateGame={updateGame}
+                    selectGameExecutable={selectGameExecutable}
+                    onOpenDownloadOptions={() => setShowRepacksModal(true)}
                     onClose={() => {
                       setShowGameOptionsModal(false);
                     }}
