@@ -177,7 +177,8 @@
     display: flex;
     align-items: center;
     gap: globals.$spacing-unit;
-    padding: calc(globals.$spacing-unit * 1.25) calc(globals.$spacing-unit * 1.5);
+    padding: calc(globals.$spacing-unit * 1.25)
+      calc(globals.$spacing-unit * 1.5);
     background: none;
     border: none;
     border-radius: 4px;
@@ -251,7 +252,8 @@
     display: flex;
     align-items: center;
     gap: calc(globals.$spacing-unit * 0.5);
-    padding: calc(globals.$spacing-unit * 0.75) calc(globals.$spacing-unit * 1.5);
+    padding: calc(globals.$spacing-unit * 0.75)
+      calc(globals.$spacing-unit * 1.5);
     background-color: rgba(255, 255, 255, 0.05);
     border: 1px solid globals.$border-color;
     border-radius: 20px;

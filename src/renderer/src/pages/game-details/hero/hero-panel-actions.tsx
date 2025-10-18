@@ -26,9 +26,7 @@ interface HeroPanelGameActionsProps {
   onOpenDownloadOptions: () => void;
   updateGame: () => Promise<void>;
   toggleLibraryGameDisabled: boolean;
-  setToggleLibraryGameDisabled: React.Dispatch<
-    React.SetStateAction<boolean>
-  >;
+  setToggleLibraryGameDisabled: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
 function HeroPanelGameActions({

@@ -96,7 +96,7 @@ export const getSteamAppCategories = async (
 ): Promise<string[]> => {
   try {
     const details = await getSteamAppDetails(objectId, language);
-    
+
     if (!details?.genres) {
       // Fallback to English if no genres found in requested language
       if (language !== "english") {

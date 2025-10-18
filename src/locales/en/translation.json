@@ -433,7 +433,7 @@
     "news_see_less": "See less",
     "news_published": "Published {{time}}",
     "news_read_more": "Read more"
-    },
+  },
   "settings": {
     "downloads_path": "Downloads path",
     "change": "Update",
