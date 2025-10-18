@@ -211,6 +211,8 @@ contextBridge.exposeInMainWorld("electron", {
   getLibraryCategories: (
     games: Array<{ id: string; shop: GameShop; objectId: string }>
   ) => ipcRenderer.invoke("getLibraryCategories", games),
+  getSteamNews: (language: string) =>
+    ipcRenderer.invoke("getSteamNews", language),
   openGameInstaller: (shop: GameShop, objectId: string) =>
     ipcRenderer.invoke("openGameInstaller", shop, objectId),
   openGameInstallerPath: (shop: GameShop, objectId: string) =>
