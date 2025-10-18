@@ -3,8 +3,12 @@ import { useCallback, useEffect, useState } from "react";
 import { useAppDispatch } from "./redux";
 import { setGenres, setTags } from "@renderer/features";
 
+const EXTERNAL_RESOURCES_BASE_URL =
+  import.meta.env.RENDERER_VITE_EXTERNAL_RESOURCES_URL ||
+  "https://cdn.losbroxas.org";
+
 export const externalResourcesInstance = axios.create({
-  baseURL: import.meta.env.RENDERER_VITE_EXTERNAL_RESOURCES_URL,
+  baseURL: EXTERNAL_RESOURCES_BASE_URL,
 });
 
 export function useCatalogue() {

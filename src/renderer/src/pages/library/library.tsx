@@ -11,7 +11,7 @@ import {
 } from "@primer/octicons-react";
 
 import { LibraryGameCard, SteamNewsSection } from "@renderer/components";
-import { useLibrary } from "@renderer/hooks";
+import { useLibrary, useCollections } from "@renderer/hooks";
 import { useAppDispatch, useAppSelector } from "@renderer/hooks/redux";
 import {
   setSearchText,
@@ -22,6 +22,7 @@ import {
   clearLibraryFilters,
   selectFilteredAndSortedGames,
   selectAvailableCategories,
+  setLibrary,
   type SortBy,
   type QuickFilter,
 } from "@renderer/features";
@@ -116,10 +117,7 @@ export default function Library() {
     });
   }, [updateLibrary, loadCollections]);
 
-  const selectedCollection = useMemo(() => {
-    if (!selectedCollectionId) return null;
-    return collections.find((c) => c.id === selectedCollectionId) || null;
-  }, [selectedCollectionId, collections]);
+
 
   // Load categories after library is loaded
   useEffect(() => {
@@ -143,6 +141,9 @@ export default function Library() {
               game.categories = categoriesMap[gameId];
             }
           });
+
+          // Trigger state update so selectors recompute available categories
+          dispatch(setLibrary([...library]));
         })
         .catch((err) => {
           console.error("Failed to load categories:", err);
@@ -297,6 +298,10 @@ export default function Library() {
     setLocalSearchText("");
     dispatch(clearLibraryFilters());
   };
+
+  const handleCollectionCreated = useCallback(() => {
+    loadCollections();
+  }, [loadCollections]);
 
   const renderRow = (row: LibraryRow) => (
     <div
@@ -466,6 +471,22 @@ export default function Library() {
                 </div>
               )}
             </div>
+
+            <button
+              type="button"
+              className="library__utility-button"
+              onClick={() => setShowCreateModal(true)}
+            >
+              {t("create_collection")}
+            </button>
+
+            <button
+              type="button"
+              className="library__utility-button"
+              onClick={() => setShowManageModal(true)}
+            >
+              {t("manage_collections")}
+            </button>
           </div>
         </div>
 

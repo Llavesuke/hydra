@@ -36,6 +36,7 @@ import "./library/toggle-automatic-cloud-sync";
 import "./library/get-default-wine-prefix-selection-path";
 import "./library/cleanup-unused-assets";
 import "./library/create-steam-shortcut";
+import "./library/get-steam-news";
 import "./library/copy-custom-game-asset";
 import "./misc/open-checkout";
 import "./misc/open-external";
