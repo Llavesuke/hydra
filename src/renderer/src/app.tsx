@@ -126,12 +126,15 @@ export function App() {
         }
       })
       .finally(() => {
-        if (document.getElementById("external-resources")) return;
-
-        const $script = document.createElement("script");
-        $script.id = "external-resources";
-        $script.src = `${import.meta.env.RENDERER_VITE_EXTERNAL_RESOURCES_URL}/bundle.js?t=${Date.now()}`;
-        document.head.appendChild($script);
+        if (!document.getElementById("external-resources")) {
+          const baseUrl = import.meta.env.RENDERER_VITE_EXTERNAL_RESOURCES_URL;
+          if (baseUrl) {
+            const $script = document.createElement("script");
+            $script.id = "external-resources";
+            $script.src = `${baseUrl}/bundle.js?t=${Date.now()}`;
+            document.head.appendChild($script);
+          }
+        }
       });
   }, [fetchUserDetails, updateUserDetails, dispatch]);
 

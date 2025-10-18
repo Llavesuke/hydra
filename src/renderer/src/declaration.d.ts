@@ -34,6 +34,7 @@ import type {
   DownloadSourceValidationResult,
   GameRepack,
   LibraryCollection,
+  SteamNewsEntry,
 } from "@types";
 import type { AxiosProgressEvent } from "axios";
 
@@ -211,6 +212,7 @@ declare global {
     ) => () => Electron.IpcRenderer;
     getDefaultWinePrefixSelectionPath: () => Promise<string | null>;
     createSteamShortcut: (shop: GameShop, objectId: string) => Promise<void>;
+    getSteamNews: (language: string) => Promise<SteamNewsEntry[]>;
 
     /* Download sources */
     addDownloadSource: (url: string) => Promise<DownloadSource>;

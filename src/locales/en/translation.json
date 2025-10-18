@@ -422,8 +422,18 @@
     "categories": "Categories",
     "clear_filters": "Clear Filters",
     "no_categories": "No categories available",
-    "smart_suggestions_tooltip": "Games prioritized by recent downloads and activity"
-  },
+    "smart_suggestions_tooltip": "Games prioritized by recent downloads and activity",
+    "news_section_title": "Latest news from your games",
+    "news_loading": "Loading news…",
+    "news_error": "Failed to load news",
+    "news_retry": "Retry",
+    "news_empty": "No news yet",
+    "news_empty_description": "Play some games in your library to see their news here",
+    "news_see_more": "See more",
+    "news_see_less": "See less",
+    "news_published": "Published {{time}}",
+    "news_read_more": "Read more"
+    },
   "settings": {
     "downloads_path": "Downloads path",
     "change": "Update",
