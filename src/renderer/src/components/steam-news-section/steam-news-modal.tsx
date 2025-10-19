@@ -31,14 +31,23 @@ function preprocessSteamNewsHtml(html: string): string {
   let processed = html;
 
   // Replace Steam macro placeholders with absolute URLs
-  processed = processed.replace(/\{STEAM_CLAN_IMAGE\}/g, "https://clan.cloudflare.steamstatic.com/images");
-  processed = processed.replace(/\{STEAM_APP_IMAGE\}/g, "https://cdn.cloudflare.steamstatic.com/steam/apps");
+  processed = processed.replace(
+    /\{STEAM_CLAN_IMAGE\}/g,
+    "https://clan.cloudflare.steamstatic.com/images"
+  );
+  processed = processed.replace(
+    /\{STEAM_APP_IMAGE\}/g,
+    "https://cdn.cloudflare.steamstatic.com/steam/apps"
+  );
 
   // Basic BBCode to HTML conversions (common in some Steam posts)
   processed = processed.replace(/\[img\](.*?)\[\/img\]/gi, '<img src="$1" />');
-  processed = processed.replace(/\[url=(.*?)\](.*?)\[\/url\]/gi, '<a href="$1">$2<\/a>');
-  processed = processed.replace(/\[b\](.*?)\[\/b\]/gi, '<strong>$1<\/strong>');
-  processed = processed.replace(/\[i\](.*?)\[\/i\]/gi, '<em>$1<\/em>');
+  processed = processed.replace(
+    /\[url=(.*?)\](.*?)\[\/url\]/gi,
+    '<a href="$1">$2<\/a>'
+  );
+  processed = processed.replace(/\[b\](.*?)\[\/b\]/gi, "<strong>$1<\/strong>");
+  processed = processed.replace(/\[i\](.*?)\[\/i\]/gi, "<em>$1<\/em>");
 
   return processed;
 }
@@ -69,9 +78,22 @@ function sanitizeNewsHtml(html: string): string {
   const container = document.createElement("div");
   container.innerHTML = html;
 
+  const isHttpUrl = (value: string): boolean => {
+    try {
+      const u = new URL(value);
+      return u.protocol === "http:" || u.protocol === "https:";
+    } catch {
+      return false;
+    }
+  };
+
   const walk = (node: Element) => {
     // Remove disallowed elements like script/styles
-    if (["script", "style", "iframe", "object", "embed", "link", "meta"].includes(node.tagName.toLowerCase())) {
+    if (
+      ["script", "style", "iframe", "object", "embed", "link", "meta"].includes(
+        node.tagName.toLowerCase()
+      )
+    ) {
       node.remove();
       return;
     }
@@ -99,8 +121,12 @@ function sanitizeNewsHtml(html: string): string {
       // Restore safe attributes
       if (tag === "a") {
         const a = el as HTMLAnchorElement;
-        const href = (a.getAttribute("href") || (a as any).href || "").toString();
-        if (/^https?:\/\//i.test(href)) {
+        const href = (
+          a.getAttribute("href") ||
+          (a as any).href ||
+          ""
+        ).toString();
+        if (isHttpUrl(href)) {
           a.setAttribute("href", href);
           a.setAttribute("target", "_blank");
           a.setAttribute("rel", "noopener noreferrer");
@@ -109,8 +135,12 @@ function sanitizeNewsHtml(html: string): string {
 
       if (tag === "img") {
         const img = el as HTMLImageElement;
-        const src = (img.getAttribute("src") || (img as any).src || "").toString();
-        if (/^https?:\/\//i.test(src)) {
+        const src = (
+          img.getAttribute("src") ||
+          (img as any).src ||
+          ""
+        ).toString();
+        if (isHttpUrl(src)) {
           img.setAttribute("src", src);
           img.setAttribute("loading", "lazy");
           img.removeAttribute("style");
@@ -126,12 +156,19 @@ function sanitizeNewsHtml(html: string): string {
   return container.innerHTML;
 }
 
-export function SteamNewsModal({ visible, entry, newsItem, onClose }: SteamNewsModalProps) {
+export function SteamNewsModal({
+  visible,
+  entry,
+  newsItem,
+  onClose,
+}: SteamNewsModalProps) {
   const { t } = useTranslation("library");
 
   const headerImage = useMemo(() => {
     if (!entry || !newsItem) return null;
-    const fromContent = extractFirstImageSrc(preprocessSteamNewsHtml(newsItem.contents));
+    const fromContent = extractFirstImageSrc(
+      preprocessSteamNewsHtml(newsItem.contents)
+    );
     return fromContent || entry.libraryImageUrl || entry.coverImageUrl || null;
   }, [entry, newsItem]);
 
@@ -152,21 +189,35 @@ export function SteamNewsModal({ visible, entry, newsItem, onClose }: SteamNewsM
   };
 
   return (
-    <Modal visible={visible} onClose={onClose} title={entry?.gameTitle || ""} large>
+    <Modal
+      visible={visible}
+      onClose={onClose}
+      title={entry?.gameTitle || ""}
+      large
+    >
       <div className="steam-news-modal">
         {headerImage && (
-          <div className="steam-news-modal__hero" style={{ backgroundImage: `url(${headerImage})` }} />)
-        }
+          <div
+            className="steam-news-modal__hero"
+            style={{ backgroundImage: `url(${headerImage})` }}
+          />
+        )}
         <div className="steam-news-modal__header">
           <h2 className="steam-news-modal__title">{newsItem?.title}</h2>
           <div className="steam-news-modal__meta">
             <span>{publishedAt}</span>
-            <button className="steam-news-modal__open" onClick={handleOpenExternal}>
+            <button
+              className="steam-news-modal__open"
+              onClick={handleOpenExternal}
+            >
               {t("news_read_more")}
             </button>
           </div>
         </div>
-        <div className="steam-news-modal__content" dangerouslySetInnerHTML={{ __html: sanitizedHtml }} />
+        <div
+          className="steam-news-modal__content"
+          dangerouslySetInnerHTML={{ __html: sanitizedHtml }}
+        />
       </div>
     </Modal>
   );

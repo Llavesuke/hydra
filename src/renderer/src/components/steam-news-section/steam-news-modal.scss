@@ -37,7 +37,7 @@
     border-radius: 6px;
     color: rgba(255, 255, 255, 0.9);
     cursor: pointer;
-    transition: all .2s ease;
+    transition: all 0.2s ease;
 
     &:hover {
       border-color: #16b195;
@@ -56,7 +56,13 @@
       display: block;
     }
 
-    p, ul, ol, li, blockquote, pre, code {
+    p,
+    ul,
+    ol,
+    li,
+    blockquote,
+    pre,
+    code {
       color: rgba(255, 255, 255, 0.9);
     }
 
@@ -64,13 +70,17 @@
       margin: 0 0 12px;
     }
 
-    ul, ol {
+    ul,
+    ol {
       margin: 8px 0 12px 20px;
     }
 
-    h1, h2, h3, h4 {
+    h1,
+    h2,
+    h3,
+    h4 {
       margin: 16px 0 8px;
-      color: rgba(255,255,255,0.95);
+      color: rgba(255, 255, 255, 0.95);
     }
 
     a {
