@@ -1,0 +1,68 @@
+.steam-news-modal {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+
+  &__hero {
+    width: 100%;
+    height: 220px;
+    background-size: cover;
+    background-position: center;
+    border-radius: 8px;
+  }
+
+  &__header {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  &__title {
+    margin: 0;
+    font-size: 20px;
+    font-weight: 700;
+  }
+
+  &__meta {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    color: rgba(255, 255, 255, 0.7);
+  }
+
+  &__open {
+    margin-left: auto;
+    padding: 6px 12px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 6px;
+    color: rgba(255, 255, 255, 0.9);
+    cursor: pointer;
+    transition: all .2s ease;
+
+    &:hover {
+      border-color: #16b195;
+      color: #16b195;
+    }
+  }
+
+  &__content {
+    line-height: 1.6;
+
+    img {
+      max-width: 100%;
+      height: auto;
+      border-radius: 6px;
+      margin: 8px 0;
+      display: block;
+    }
+
+    p, ul, ol, li, blockquote, pre, code {
+      color: rgba(255, 255, 255, 0.9);
+    }
+
+    a {
+      color: #16b195;
+      text-decoration: underline;
+    }
+  }
+}

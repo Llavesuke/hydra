@@ -124,6 +124,7 @@ export function LibraryGameCard({ game, onNavigate }: LibraryGameCardProps) {
   const tooltipId = `library-game-card-${game.id}`;
 
   const imageUrl = game.coverImageUrl || game.libraryImageUrl || game.iconUrl;
+  const displayTitle = (game.title || "").replace(/_/g, " ");
 
   const handleCardClick = () => {
     if (onNavigate) onNavigate();
@@ -148,7 +149,7 @@ export function LibraryGameCard({ game, onNavigate }: LibraryGameCardProps) {
         {imageUrl && (
           <img
             src={imageUrl}
-            alt={game.title}
+            alt={displayTitle}
             className="library-game-card__image"
             loading="lazy"
           />
@@ -259,7 +260,7 @@ export function LibraryGameCard({ game, onNavigate }: LibraryGameCardProps) {
         </div>
       </div>
 
-      <h3 className="library-game-card__title">{game.title}</h3>
+      <h3 className="library-game-card__title">{displayTitle}</h3>
 
       <Tooltip
         id={tooltipId}

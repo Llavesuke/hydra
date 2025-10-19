@@ -2,7 +2,8 @@ export interface SteamNewsItem {
   gid: string;
   title: string;
   url: string;
-  contents: string;
+  contents: string; // full HTML content as provided by Steam
+  excerpt: string; // plain text excerpt for previews
   date: number;
   feedlabel: string;
   feedname: string;
@@ -24,7 +25,7 @@ export interface SteamNewsEntry {
 export interface SteamNewsResponse {
   appnews: {
     appid: number;
-    newsitems: SteamNewsItem[];
+    newsitems: Omit<SteamNewsItem, "excerpt">[];
     count: number;
   };
 }

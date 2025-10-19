@@ -95,20 +95,22 @@ export const getSteamAppCategories = async (
   language: string
 ): Promise<string[]> => {
   try {
-    const details = await getSteamAppDetails(objectId, language);
+    // Always try English first to guarantee data presence, then localize if possible
+    const englishDetails = await getSteamAppDetails(objectId, "english");
 
-    if (!details?.genres) {
-      // Fallback to English if no genres found in requested language
-      if (language !== "english") {
-        const englishDetails = await getSteamAppDetails(objectId, "english");
-        if (englishDetails?.genres) {
-          return englishDetails.genres.map((genre) => genre.name);
-        }
-      }
-      return [];
+    if (englishDetails?.genres?.length) {
+      return englishDetails.genres.map((genre) => genre.name);
     }
 
-    return details.genres.map((genre) => genre.name);
+    // Fallback to requested language (in case English fails but localized data exists)
+    if (language && language !== "english") {
+      const localized = await getSteamAppDetails(objectId, language);
+      if (localized?.genres?.length) {
+        return localized.genres.map((genre) => genre.name);
+      }
+    }
+
+    return [];
   } catch (err) {
     const error = err as Error;
     logger.error("Error on getSteamAppCategories", {
