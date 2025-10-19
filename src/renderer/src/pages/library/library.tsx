@@ -22,6 +22,7 @@ import {
   selectFilteredAndSortedGames,
   selectAvailableCategories,
   setLibrary,
+  toggleQuickFilter,
   type SortBy,
 } from "@renderer/features";
 import { buildGameDetailsPath } from "@renderer/helpers";
@@ -36,7 +37,7 @@ export default function Library() {
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
   const { library, updateLibrary } = useLibrary();
-  const { loadCollections } = useCollections();
+  const { loadCollections, collections } = useCollections();
 
   const searchInputRef = useRef<HTMLInputElement>(null);
   const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
@@ -48,9 +49,14 @@ export default function Library() {
   const [isLoadingCategories, setIsLoadingCategories] = useState(false);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showManageModal, setShowManageModal] = useState(false);
+  const [selectedCollectionId, setSelectedCollectionId] = useState<string | null>(
+    null
+  );
+  const [showCollectionsMenu, setShowCollectionsMenu] = useState(false);
 
   const categoryMenuRef = useRef<HTMLDivElement>(null);
   const sortMenuRef = useRef<HTMLDivElement>(null);
+  const collectionsMenuRef = useRef<HTMLDivElement>(null);
 
   const filteredLibrary = useAppSelector(selectFilteredAndSortedGames);
   const availableCategories = useAppSelector(selectAvailableCategories);
@@ -58,6 +64,9 @@ export default function Library() {
     (state) => state.libraryFilters.selectedCategories
   );
   const sortBy = useAppSelector((state) => state.libraryFilters.sortBy);
+  const activeQuickFilters = useAppSelector(
+    (state) => state.libraryFilters.activeQuickFilters
+  );
 
   useEffect(() => {
     setIsLoading(true);
@@ -96,6 +105,46 @@ export default function Library() {
         });
     }
   }, [library.length]);
+
+  // Ensure poster (cover) images are available for cards
+  useEffect(() => {
+    if (!library.length) return;
+
+    const missingAssets = library.filter(
+      (g) => !g.coverImageUrl && !!g.objectId && !!g.shop
+    );
+
+    if (missingAssets.length === 0) return;
+
+    Promise.all(
+      missingAssets.map((g) =>
+        window.electron
+          .getGameAssets(g.objectId, g.shop)
+          .catch(() => null)
+      )
+    )
+      .then((assetsList) => {
+        const byKey = new Map<string, any>();
+        assetsList.forEach((assets, idx) => {
+          const game = missingAssets[idx];
+          if (assets) byKey.set(game.id, assets);
+        });
+
+        if (byKey.size === 0) return;
+
+        const updated = library.map((g) => {
+          const assets = byKey.get(g.id);
+          if (!assets) return g;
+          return {
+            ...g,
+            ...assets,
+          } as LibraryGame;
+        });
+
+        dispatch(setLibrary(updated));
+      })
+      .catch(() => {});
+  }, [library, dispatch]);
 
   useEffect(() => {
     const onFavoriteToggled = () => {
@@ -171,6 +220,12 @@ export default function Library() {
       ) {
         setShowSortMenu(false);
       }
+      if (
+        collectionsMenuRef.current &&
+        !collectionsMenuRef.current.contains(event.target as Node)
+      ) {
+        setShowCollectionsMenu(false);
+      }
     };
 
     document.addEventListener("mousedown", handleClickOutside);
@@ -224,6 +279,23 @@ export default function Library() {
   const hasActiveFilters = useMemo(() => {
     return Boolean(localSearchText || selectedCategories.length > 0);
   }, [localSearchText, selectedCategories.length]);
+
+  const selectedCollection = useMemo(
+    () => collections.find((c) => c.id === selectedCollectionId) || null,
+    [collections, selectedCollectionId]
+  );
+
+  const displayedLibrary = useMemo(() => {
+    if (!selectedCollectionId) return filteredLibrary;
+    const collection = collections.find((c) => c.id === selectedCollectionId);
+    if (!collection) return filteredLibrary;
+    const ids = new Set(collection.gameIds);
+    return filteredLibrary.filter((g) => ids.has(g.id));
+  }, [filteredLibrary, selectedCollectionId, collections]);
+
+  const handleToggleQuick = (filter: "favorites" | "installed" | "backlog") => {
+    dispatch(toggleQuickFilter(filter));
+  };
 
   return (
     <SkeletonTheme baseColor="#1c1c1c" highlightColor="#444">
@@ -360,6 +432,49 @@ export default function Library() {
               )}
             </div>
 
+            <div className="library__filter-group" ref={collectionsMenuRef}>
+              <button
+                type="button"
+                className={`library__utility-button${selectedCollection ? " library__utility-button--active" : ""}`}
+                onClick={() => setShowCollectionsMenu(!showCollectionsMenu)}
+                aria-label={t("collections")}
+              >
+                <span>{selectedCollection ? selectedCollection.name : t("collections")}</span>
+                <ChevronDownIcon size={16} />
+              </button>
+
+              {showCollectionsMenu && (
+                <div className="library__dropdown-menu library__dropdown-menu--scrollable">
+                  {selectedCollection && (
+                    <>
+                      <button
+                        type="button"
+                        className="library__menu-item library__menu-item--clear"
+                        onClick={() => setSelectedCollectionId(null)}
+                      >
+                        <XIcon size={14} />
+                        {t("clear_filters")}
+                      </button>
+                      <div className="library__menu-divider" />
+                    </>
+                  )}
+                  {collections.map((c) => (
+                    <button
+                      key={c.id}
+                      type="button"
+                      className={`library__menu-item${selectedCollectionId === c.id ? " library__menu-item--active" : ""}`}
+                      onClick={() => {
+                        setSelectedCollectionId(c.id);
+                        setShowCollectionsMenu(false);
+                      }}
+                    >
+                      {c.name}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+
             <button
               type="button"
               className="library__utility-button"
@@ -378,13 +493,28 @@ export default function Library() {
           </div>
         </div>
 
-        <div
-          className="library__news-section"
-          data-library-news-slot
-          role="complementary"
-          aria-label={t("news")}
-        >
-          <SteamNewsSection />
+        <div className="library__quick-filters">
+          <button
+            type="button"
+            className={`library__chip${activeQuickFilters.includes("favorites") ? " library__chip--active" : ""}`}
+            onClick={() => handleToggleQuick("favorites")}
+          >
+            {t("filter_favorites")}
+          </button>
+          <button
+            type="button"
+            className={`library__chip${activeQuickFilters.includes("installed") ? " library__chip--active" : ""}`}
+            onClick={() => handleToggleQuick("installed")}
+          >
+            {t("filter_installed")}
+          </button>
+          <button
+            type="button"
+            className={`library__chip${activeQuickFilters.includes("backlog") ? " library__chip--active" : ""}`}
+            onClick={() => handleToggleQuick("backlog")}
+          >
+            {t("filter_backlog")}
+          </button>
         </div>
 
         <div className="library__content">
@@ -402,7 +532,7 @@ export default function Library() {
           ) : (
             <div className="library__grid">
               <AnimatePresence>
-                {filteredLibrary.map((game, idx) => (
+                {displayedLibrary.map((game, idx) => (
                   <motion.div
                     key={game.id}
                     initial={{ opacity: 0, y: 10, scale: 0.98 }}
@@ -435,6 +565,15 @@ export default function Library() {
               </button>
             </div>
           )}
+        </div>
+
+        <div
+          className="library__news-section"
+          data-library-news-slot
+          role="complementary"
+          aria-label={t("news")}
+        >
+          <SteamNewsSection />
         </div>
 
         <CreateCollectionModal

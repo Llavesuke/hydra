@@ -289,6 +289,13 @@
     flex-direction: column;
   }
 
+  &__quick-filters {
+    display: flex;
+    gap: globals.$spacing-unit;
+    padding: 0 calc(globals.$spacing-unit * 2);
+    flex-wrap: wrap;
+  }
+
   &__grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));

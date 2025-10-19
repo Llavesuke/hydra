@@ -13,6 +13,31 @@ interface NewsCardProps {
   onOpen: (entry: SteamNewsEntry, item: SteamNewsItem) => void;
 }
 
+function preprocessSteamNewsHtml(html: string): string {
+  return html
+    .replace(/\{STEAM_CLAN_IMAGE\}/g, "https://clan.cloudflare.steamstatic.com/images")
+    .replace(/\{STEAM_APP_IMAGE\}/g, "https://cdn.cloudflare.steamstatic.com/steam/apps");
+}
+
+function extractFirstImageSrc(html: string): string | null {
+  try {
+    const div = document.createElement("div");
+    div.innerHTML = preprocessSteamNewsHtml(html);
+    const img = div.querySelector("img");
+    if (!img) return null;
+    const src = img.getAttribute("src") || (img as any).src || "";
+    try {
+      const u = new URL(src);
+      if (u.protocol === "http:" || u.protocol === "https:") return src;
+    } catch {
+      return null;
+    }
+    return null;
+  } catch {
+    return null;
+  }
+}
+
 const NewsCard = ({ entry, newsItem, onOpen }: NewsCardProps) => {
   const { t } = useTranslation("library");
   const { formatRelativeTime } = useDate();
@@ -20,6 +45,8 @@ const NewsCard = ({ entry, newsItem, onOpen }: NewsCardProps) => {
   const handleClick = () => {
     onOpen(entry, newsItem);
   };
+
+  const newsCover = extractFirstImageSrc(newsItem.contents) || entry.libraryImageUrl || entry.coverImageUrl || null;
 
   return (
     <div
@@ -35,9 +62,9 @@ const NewsCard = ({ entry, newsItem, onOpen }: NewsCardProps) => {
       tabIndex={0}
     >
       <div className="steam-news-card__image-container">
-        {entry.libraryImageUrl ? (
+        {newsCover ? (
           <img
-            src={entry.libraryImageUrl}
+            src={newsCover}
             alt={entry.gameTitle}
             className="steam-news-card__image"
           />

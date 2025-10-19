@@ -12,25 +12,7 @@ export interface SteamNewsModalProps {
   onClose: () => void;
 }
 
-function extractFirstImageSrc(html: string): string | null {
-  try {
-    const div = document.createElement("div");
-    div.innerHTML = html;
-    const img = div.querySelector("img");
-    if (img && img.getAttribute("src")) {
-      const src = img.getAttribute("src") as string;
-      try {
-        const u = new URL(src);
-        if (u.protocol === "http:" || u.protocol === "https:") return src;
-      } catch {
-        // ignore invalid URL
-      }
-    }
-    return null;
-  } catch {
-    return null;
-  }
-}
+
 
 function preprocessSteamNewsHtml(html: string): string {
   let processed = html;
@@ -170,12 +152,10 @@ export function SteamNewsModal({
   const { t } = useTranslation("library");
 
   const headerImage = useMemo(() => {
-    if (!entry || !newsItem) return null;
-    const fromContent = extractFirstImageSrc(
-      preprocessSteamNewsHtml(newsItem.contents)
-    );
-    return fromContent || entry.libraryImageUrl || entry.coverImageUrl || null;
-  }, [entry, newsItem]);
+    if (!entry) return null;
+    // Use the game's banner (library image) as the hero background
+    return entry.libraryImageUrl || entry.coverImageUrl || null;
+  }, [entry]);
 
   const sanitizedHtml = useMemo(() => {
     if (!newsItem) return "";
