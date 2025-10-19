@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import Skeleton, { SkeletonTheme } from "react-loading-skeleton";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   SearchIcon,
   FilterIcon,
@@ -400,13 +401,25 @@ export default function Library() {
             </div>
           ) : (
             <div className="library__grid">
-              {filteredLibrary.map((game) => (
-                <LibraryGameCard
-                  key={game.id}
-                  game={game}
-                  onNavigate={() => handleGameClick(game)}
-                />
-              ))}
+              <AnimatePresence>
+                {filteredLibrary.map((game, idx) => (
+                  <motion.div
+                    key={game.id}
+                    initial={{ opacity: 0, y: 10, scale: 0.98 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: -10, scale: 0.98 }}
+                    transition={{
+                      duration: 0.2,
+                      delay: Math.min(idx * 0.02, 0.2),
+                    }}
+                  >
+                    <LibraryGameCard
+                      game={game}
+                      onNavigate={() => handleGameClick(game)}
+                    />
+                  </motion.div>
+                ))}
+              </AnimatePresence>
             </div>
           )}
 

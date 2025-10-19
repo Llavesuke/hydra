@@ -261,6 +261,15 @@ export function LibraryGameCard({ game, onNavigate }: LibraryGameCardProps) {
       </div>
 
       <h3 className="library-game-card__title">{displayTitle}</h3>
+      {Array.isArray(game.categories) && game.categories.length > 0 && (
+        <div className="library-game-card__categories">
+          {game.categories.slice(0, 3).map((cat) => (
+            <span key={cat} className="library-game-card__category">
+              {cat}
+            </span>
+          ))}
+        </div>
+      )}
 
       <Tooltip
         id={tooltipId}

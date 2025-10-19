@@ -47,13 +47,16 @@ const fetchSteamNews = async (
     );
 
     if (response.data?.appnews?.newsitems) {
-      return response.data.appnews.newsitems.map((item) => ({
-        ...item,
-        appid: appId,
-        // Keep full HTML contents for the modal and generate a short excerpt for cards
-        contents: item.contents,
-        excerpt: truncateText(stripHtmlTags(item.contents), 200),
-      } as SteamNewsItem));
+      return response.data.appnews.newsitems.map(
+        (item) =>
+          ({
+            ...item,
+            appid: appId,
+            // Keep full HTML contents for the modal and generate a short excerpt for cards
+            contents: item.contents,
+            excerpt: truncateText(stripHtmlTags(item.contents), 200),
+          }) as SteamNewsItem
+      );
     }
 
     if (languageCode !== "english") {
@@ -70,12 +73,15 @@ const fetchSteamNews = async (
       );
 
       if (fallbackResponse.data?.appnews?.newsitems) {
-        return fallbackResponse.data.appnews.newsitems.map((item) => ({
-          ...item,
-          appid: appId,
-          contents: item.contents,
-          excerpt: truncateText(stripHtmlTags(item.contents), 200),
-        } as SteamNewsItem));
+        return fallbackResponse.data.appnews.newsitems.map(
+          (item) =>
+            ({
+              ...item,
+              appid: appId,
+              contents: item.contents,
+              excerpt: truncateText(stripHtmlTags(item.contents), 200),
+            }) as SteamNewsItem
+        );
       }
     }
 
