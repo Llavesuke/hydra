@@ -298,7 +298,10 @@
 
   &__grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    grid-template-columns: repeat(
+      auto-fill,
+      minmax(var(--library-grid-min, 160px), 1fr)
+    );
     gap: calc(globals.$spacing-unit * 2);
   }
 
@@ -337,6 +340,46 @@
     p {
       font-size: globals.$body-font-size;
       margin: 0;
+    }
+  }
+
+  // Smart suggestions horizontal list
+  &__suggestions {
+    display: flex;
+    flex-direction: column;
+    gap: calc(globals.$spacing-unit * 1);
+    padding: 0 calc(globals.$spacing-unit * 2);
+  }
+
+  &__suggestions-title {
+    margin: 0;
+    color: globals.$muted-color;
+    font-size: 16px;
+  }
+
+  &__suggestions-list {
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: minmax(var(--library-grid-min, 160px), 1fr);
+    gap: calc(globals.$spacing-unit * 2);
+    overflow-x: auto;
+    padding-bottom: calc(globals.$spacing-unit * 1);
+
+    &::-webkit-scrollbar {
+      height: 8px;
+    }
+
+    &::-webkit-scrollbar-track {
+      background: globals.$background-color;
+    }
+
+    &::-webkit-scrollbar-thumb {
+      background: globals.$border-color;
+      border-radius: 4px;
+
+      &:hover {
+        background: rgba(255, 255, 255, 0.2);
+      }
     }
   }
 }

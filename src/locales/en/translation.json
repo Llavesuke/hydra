@@ -656,9 +656,16 @@
     "news_see_more": "See more",
     "news_see_less": "See less",
     "news_published": "Published {{time}}",
-    "news_read_more": "Read more"
-  },
-  "binary_not_found_modal": {
+    "news_read_more": "Read more",
+    "layout": "Layout",
+    "density": "Density",
+    "compact": "Compact",
+    "cozy": "Cozy",
+    "spacious": "Spacious",
+    "show_suggestions": "Show suggestions",
+    "suggestions": "Suggestions"
+    },
+    "binary_not_found_modal": {
     "title": "Programs not installed",
     "description": "Wine or Lutris executables were not found on your system",
     "instructions": "Check the correct way to install any of them on your Linux distro so that the game can run normally"
