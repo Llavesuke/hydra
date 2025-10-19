@@ -48,7 +48,7 @@ export default function Library() {
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
   const { library, updateLibrary } = useLibrary();
-  const { collections, loadCollections } = useCollections();
+  const { loadCollections } = useCollections();
 
   const listContainerRef = useRef<HTMLDivElement>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
@@ -116,8 +116,6 @@ export default function Library() {
       setIsLoading(false);
     });
   }, [updateLibrary, loadCollections]);
-
-
 
   // Load categories after library is loaded
   useEffect(() => {
