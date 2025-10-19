@@ -51,9 +51,9 @@ export default function Library() {
   const [isLoadingCategories, setIsLoadingCategories] = useState(false);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showManageModal, setShowManageModal] = useState(false);
-  const [selectedCollectionId, setSelectedCollectionId] = useState<string | null>(
-    null
-  );
+  const [selectedCollectionId, setSelectedCollectionId] = useState<
+    string | null
+  >(null);
   const [showCollectionsMenu, setShowCollectionsMenu] = useState(false);
 
   const categoryMenuRef = useRef<HTMLDivElement>(null);
@@ -120,9 +120,7 @@ export default function Library() {
 
     Promise.all(
       missingAssets.map((g) =>
-        window.electron
-          .getGameAssets(g.objectId, g.shop)
-          .catch(() => null)
+        window.electron.getGameAssets(g.objectId, g.shop).catch(() => null)
       )
     )
       .then((assetsList) => {
@@ -441,7 +439,11 @@ export default function Library() {
                 onClick={() => setShowCollectionsMenu(!showCollectionsMenu)}
                 aria-label={t("collections")}
               >
-                <span>{selectedCollection ? selectedCollection.name : t("collections")}</span>
+                <span>
+                  {selectedCollection
+                    ? selectedCollection.name
+                    : t("collections")}
+                </span>
                 <ChevronDownIcon size={16} />
               </button>
 
@@ -498,9 +500,6 @@ export default function Library() {
                 </div>
               )}
             </div>
-
-
-
           </div>
         </div>
 

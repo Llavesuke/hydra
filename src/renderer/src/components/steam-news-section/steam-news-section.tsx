@@ -16,10 +16,16 @@ interface NewsCardProps {
 
 function preprocessSteamNewsHtml(html: string): string {
   return (html ?? "")
-    .replace(/\{STEAM_CLAN_IMAGE\}/g, "https://clan.cloudflare.steamstatic.com/images")
-    .replace(/\{STEAM_APP_IMAGE\}/g, "https://cdn.cloudflare.steamstatic.com/steam/apps")
-    .replace(/src=\"\/\//g, 'src="https://')
-    .replace(/href=\"\/\//g, 'href="https://');
+    .replace(
+      /\{STEAM_CLAN_IMAGE\}/g,
+      "https://clan.cloudflare.steamstatic.com/images"
+    )
+    .replace(
+      /\{STEAM_APP_IMAGE\}/g,
+      "https://cdn.cloudflare.steamstatic.com/steam/apps"
+    )
+    .replace(/src="\/\//g, 'src="https://')
+    .replace(/href="\/\//g, 'href="https://');
 }
 
 function extractFirstImageSrc(html: string): string | null {
@@ -49,7 +55,11 @@ const NewsCard = ({ entry, newsItem, onOpen }: NewsCardProps) => {
     onOpen(entry, newsItem);
   };
 
-  const newsCover = extractFirstImageSrc(newsItem.contents) || entry.libraryImageUrl || entry.coverImageUrl || null;
+  const newsCover =
+    extractFirstImageSrc(newsItem.contents) ||
+    entry.libraryImageUrl ||
+    entry.coverImageUrl ||
+    null;
 
   return (
     <div

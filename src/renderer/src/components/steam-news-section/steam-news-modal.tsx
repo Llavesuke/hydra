@@ -12,8 +12,6 @@ export interface SteamNewsModalProps {
   onClose: () => void;
 }
 
-
-
 function preprocessSteamNewsHtml(html: string): string {
   let processed = html ?? "";
 
@@ -28,22 +26,22 @@ function preprocessSteamNewsHtml(html: string): string {
   );
 
   // Protocol-relative URLs -> https
-  processed = processed.replace(/src=\"\/\//g, 'src="https://');
-  processed = processed.replace(/href=\"\/\//g, 'href="https://');
+  processed = processed.replace(/src="\/\//g, 'src="https://');
+  processed = processed.replace(/href="\/\//g, 'href="https://');
 
   // Basic BBCode to HTML conversions (common in some Steam posts)
   processed = processed.replace(/\[img\](.*?)\[\/img\]/gi, '<img src="$1" />');
-  processed = processed.replace(/\[url=(.*?)\](.*?)\[\/url\]/gi, '<a href="$1">$2<\/a>');
-  processed = processed.replace(/\[b\](.*?)\[\/b\]/gi, '<strong>$1<\/strong>');
-  processed = processed.replace(/\[i\](.*?)\[\/i\]/gi, '<em>$1<\/em>');
-  processed = processed.replace(/\[u\](.*?)\[\/u\]/gi, '<u>$1<\/u>');
-  processed = processed.replace(/\[s\](.*?)\[\/s\]/gi, '<s>$1<\/s>');
-  processed = processed.replace(/\[list\](.*?)\[\/list\]/gis, '<ul>$1<\/ul>');
-  processed = processed.replace(/\[\*\](.*?)(?=(\[\*\]|$))/gis, '<li>$1<\/li>');
+  processed = processed.replace(/\[url=(.*?)\](.*?)\[\/url\]/gi, '<a href="$1">$2</a>');
+  processed = processed.replace(/\[b\](.*?)\[\/b\]/gi, "<strong>$1</strong>");
+  processed = processed.replace(/\[i\](.*?)\[\/i\]/gi, "<em>$1</em>");
+  processed = processed.replace(/\[u\](.*?)\[\/u\]/gi, "<u>$1</u>");
+  processed = processed.replace(/\[s\](.*?)\[\/s\]/gi, "<s>$1</s>");
+  processed = processed.replace(/\[list\](.*?)\[\/list\]/gis, "<ul>$1</ul>");
+  processed = processed.replace(/\[\*\](.*?)(?=(\[\*\]|$))/gis, "<li>$1</li>");
 
   // Convert plain new lines to <br> when inside text-only posts
   if (!/<(?:p|br|div|img|ul|ol|h\d|blockquote|table|figure)/i.test(processed)) {
-    processed = processed.replace(/\n/g, '<br />');
+    processed = processed.replace(/\n/g, "<br />");
   }
 
   return processed;
