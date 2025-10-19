@@ -19,7 +19,12 @@ function extractFirstImageSrc(html: string): string | null {
     const img = div.querySelector("img");
     if (img && img.getAttribute("src")) {
       const src = img.getAttribute("src") as string;
-      if (/^https?:\/\//i.test(src)) return src;
+      try {
+        const u = new URL(src);
+        if (u.protocol === "http:" || u.protocol === "https:") return src;
+      } catch {
+        // ignore invalid URL
+      }
     }
     return null;
   } catch {
@@ -41,13 +46,13 @@ function preprocessSteamNewsHtml(html: string): string {
   );
 
   // Basic BBCode to HTML conversions (common in some Steam posts)
-  processed = processed.replace(/\[img\](.*?)\[\/img\]/gi, '<img src="$1" />');
+  processed = processed.replace(new RegExp("\\[img\\](.*?)\\[/img\\]", "gi"), '<img src="$1" />');
   processed = processed.replace(
-    /\[url=(.*?)\](.*?)\[\/url\]/gi,
-    '<a href="$1">$2<\/a>'
+    new RegExp("\\[url=(.*?)\\](.*?)\\[/url\\]", "gi"),
+    '<a href="$1">$2</a>'
   );
-  processed = processed.replace(/\[b\](.*?)\[\/b\]/gi, "<strong>$1<\/strong>");
-  processed = processed.replace(/\[i\](.*?)\[\/i\]/gi, "<em>$1<\/em>");
+  processed = processed.replace(new RegExp("\\[b\\](.*?)\\[/b\\]", "gi"), "<strong>$1</strong>");
+  processed = processed.replace(new RegExp("\\[i\\](.*?)\\[/i\\]", "gi"), "<em>$1</em>");
 
   return processed;
 }
