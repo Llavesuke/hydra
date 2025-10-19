@@ -12,10 +12,8 @@ export interface SteamNewsModalProps {
   onClose: () => void;
 }
 
-
-
 function preprocessSteamNewsHtml(html: string): string {
-  let processed = html;
+  let processed = html ?? "";
 
   // Replace Steam macro placeholders with absolute URLs
   processed = processed.replace(
@@ -27,14 +25,24 @@ function preprocessSteamNewsHtml(html: string): string {
     "https://cdn.cloudflare.steamstatic.com/steam/apps"
   );
 
+  // Protocol-relative URLs -> https
+  processed = processed.replace(/src="\/\//g, 'src="https://');
+  processed = processed.replace(/href="\/\//g, 'href="https://');
+
   // Basic BBCode to HTML conversions (common in some Steam posts)
-  processed = processed.replace(new RegExp("\\[img\\](.*?)\\[/img\\]", "gi"), '<img src="$1" />');
-  processed = processed.replace(
-    new RegExp("\\[url=(.*?)\\](.*?)\\[/url\\]", "gi"),
-    '<a href="$1">$2</a>'
-  );
-  processed = processed.replace(new RegExp("\\[b\\](.*?)\\[/b\\]", "gi"), "<strong>$1</strong>");
-  processed = processed.replace(new RegExp("\\[i\\](.*?)\\[/i\\]", "gi"), "<em>$1</em>");
+  processed = processed.replace(/\[img\](.*?)\[\/img\]/gi, '<img src="$1" />');
+  processed = processed.replace(/\[url=(.*?)\](.*?)\[\/url\]/gi, '<a href="$1">$2</a>');
+  processed = processed.replace(/\[b\](.*?)\[\/b\]/gi, "<strong>$1</strong>");
+  processed = processed.replace(/\[i\](.*?)\[\/i\]/gi, "<em>$1</em>");
+  processed = processed.replace(/\[u\](.*?)\[\/u\]/gi, "<u>$1</u>");
+  processed = processed.replace(/\[s\](.*?)\[\/s\]/gi, "<s>$1</s>");
+  processed = processed.replace(/\[list\](.*?)\[\/list\]/gis, "<ul>$1</ul>");
+  processed = processed.replace(/\[\*\](.*?)(?=(\[\*\]|$))/gis, "<li>$1</li>");
+
+  // Convert plain new lines to <br> when inside text-only posts
+  if (!/<(?:p|br|div|img|ul|ol|h\d|blockquote|table|figure)/i.test(processed)) {
+    processed = processed.replace(/\n/g, "<br />");
+  }
 
   return processed;
 }
@@ -46,7 +54,10 @@ function sanitizeNewsHtml(html: string): string {
     "strong",
     "i",
     "em",
+    "u",
+    "s",
     "p",
+    "div",
     "ul",
     "ol",
     "li",
@@ -56,89 +67,117 @@ function sanitizeNewsHtml(html: string): string {
     "h2",
     "h3",
     "h4",
+    "h5",
+    "h6",
     "blockquote",
     "code",
     "pre",
     "span",
+    "table",
+    "thead",
+    "tbody",
+    "tr",
+    "td",
+    "th",
+    "figure",
+    "figcaption",
+    "video",
+    "source",
+    "hr",
+    "small",
+    "sup",
+    "sub",
   ]);
 
   const container = document.createElement("div");
-  container.innerHTML = html;
+  container.innerHTML = html ?? "";
+
+  const absolutizeUrl = (value: string): string => {
+    if (value.startsWith("//")) return `https:${value}`;
+    return value;
+  };
 
   const isHttpUrl = (value: string): boolean => {
     try {
-      const u = new URL(value);
+      const u = new URL(absolutizeUrl(value));
       return u.protocol === "http:" || u.protocol === "https:";
     } catch {
       return false;
     }
   };
 
-  const walk = (node: Element) => {
-    // Remove disallowed elements like script/styles
-    if (
-      ["script", "style", "iframe", "object", "embed", "link", "meta"].includes(
-        node.tagName.toLowerCase()
-      )
-    ) {
-      node.remove();
-      return;
+  // Remove disallowed wrapper elements entirely
+  for (const bad of Array.from(
+    container.querySelectorAll("script,style,iframe,object,embed,link,meta")
+  )) {
+    bad.remove();
+  }
+
+  // Sanitize descendants
+  for (const el of Array.from(container.querySelectorAll("*"))) {
+    const tag = el.tagName.toLowerCase();
+
+    if (!allowedTags.has(tag)) {
+      const parent = el.parentNode;
+      if (!parent) {
+        el.remove();
+      } else {
+        while (el.firstChild) parent.insertBefore(el.firstChild, el);
+        el.remove();
+      }
+      continue;
     }
 
-    // Sanitize attributes
-    for (const el of Array.from(node.querySelectorAll("*"))) {
-      const tag = el.tagName.toLowerCase();
-      if (!allowedTags.has(tag)) {
-        // unwrap element but keep its content
-        const parent = el.parentNode;
-        if (!parent) {
-          el.remove();
-        } else {
-          while (el.firstChild) parent.insertBefore(el.firstChild, el);
-          el.remove();
-        }
-        continue;
-      }
+    // Remove all attributes first
+    for (const attr of Array.from(el.attributes)) {
+      el.removeAttribute(attr.name);
+    }
 
-      // Remove all attributes first
-      for (const attr of Array.from(el.attributes)) {
-        el.removeAttribute(attr.name);
-      }
-
-      // Restore safe attributes
-      if (tag === "a") {
-        const a = el as HTMLAnchorElement;
-        const href = (
-          a.getAttribute("href") ||
-          (a as any).href ||
-          ""
-        ).toString();
-        if (isHttpUrl(href)) {
-          a.setAttribute("href", href);
-          a.setAttribute("target", "_blank");
-          a.setAttribute("rel", "noopener noreferrer");
-        }
-      }
-
-      if (tag === "img") {
-        const img = el as HTMLImageElement;
-        const src = (
-          img.getAttribute("src") ||
-          (img as any).src ||
-          ""
-        ).toString();
-        if (isHttpUrl(src)) {
-          img.setAttribute("src", src);
-          img.setAttribute("loading", "lazy");
-          img.removeAttribute("style");
-        } else {
-          img.remove();
-        }
+    if (tag === "a") {
+      const a = el as HTMLAnchorElement;
+      const href = absolutizeUrl(
+        (a.getAttribute("href") || (a as any).href || "").toString()
+      );
+      if (isHttpUrl(href)) {
+        a.setAttribute("href", href);
+        a.setAttribute("target", "_blank");
+        a.setAttribute("rel", "noopener noreferrer");
       }
     }
-  };
 
-  walk(container);
+    if (tag === "img") {
+      const img = el as HTMLImageElement;
+      const src = absolutizeUrl(
+        (img.getAttribute("src") || (img as any).src || "").toString()
+      );
+      if (isHttpUrl(src)) {
+        img.setAttribute("src", src);
+        img.setAttribute("loading", "lazy");
+      } else {
+        img.remove();
+      }
+    }
+
+    if (tag === "video") {
+      const video = el as HTMLVideoElement;
+      const src = video.getAttribute("src");
+      if (src && isHttpUrl(src)) {
+        video.setAttribute("src", absolutizeUrl(src));
+        video.setAttribute("controls", "true");
+      }
+      // Sanitize <source> children
+      for (const source of Array.from(video.querySelectorAll("source"))) {
+        const s = source.getAttribute("src");
+        if (s && isHttpUrl(s)) source.setAttribute("src", absolutizeUrl(s));
+        else source.remove();
+      }
+    }
+
+    if (tag === "table") {
+      (el as HTMLTableElement).setAttribute("border", "0");
+      (el as HTMLTableElement).removeAttribute("style");
+    }
+  }
 
   return container.innerHTML;
 }

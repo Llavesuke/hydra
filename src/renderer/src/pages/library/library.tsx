@@ -8,6 +8,8 @@ import {
   FilterIcon,
   XIcon,
   ChevronDownIcon,
+  PlusIcon,
+  GearIcon,
 } from "@primer/octicons-react";
 
 import { LibraryGameCard, SteamNewsSection } from "@renderer/components";
@@ -49,9 +51,9 @@ export default function Library() {
   const [isLoadingCategories, setIsLoadingCategories] = useState(false);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showManageModal, setShowManageModal] = useState(false);
-  const [selectedCollectionId, setSelectedCollectionId] = useState<string | null>(
-    null
-  );
+  const [selectedCollectionId, setSelectedCollectionId] = useState<
+    string | null
+  >(null);
   const [showCollectionsMenu, setShowCollectionsMenu] = useState(false);
 
   const categoryMenuRef = useRef<HTMLDivElement>(null);
@@ -118,9 +120,7 @@ export default function Library() {
 
     Promise.all(
       missingAssets.map((g) =>
-        window.electron
-          .getGameAssets(g.objectId, g.shop)
-          .catch(() => null)
+        window.electron.getGameAssets(g.objectId, g.shop).catch(() => null)
       )
     )
       .then((assetsList) => {
@@ -439,7 +439,11 @@ export default function Library() {
                 onClick={() => setShowCollectionsMenu(!showCollectionsMenu)}
                 aria-label={t("collections")}
               >
-                <span>{selectedCollection ? selectedCollection.name : t("collections")}</span>
+                <span>
+                  {selectedCollection
+                    ? selectedCollection.name
+                    : t("collections")}
+                </span>
                 <ChevronDownIcon size={16} />
               </button>
 
@@ -471,26 +475,41 @@ export default function Library() {
                       {c.name}
                     </button>
                   ))}
+
+                  <div className="library__menu-divider" />
+                  <button
+                    type="button"
+                    className="library__menu-item"
+                    onClick={() => {
+                      setShowCreateModal(true);
+                      setShowCollectionsMenu(false);
+                    }}
+                  >
+                    <PlusIcon size={14} /> {t("create_collection")}
+                  </button>
+                  <button
+                    type="button"
+                    className="library__menu-item"
+                    onClick={() => {
+                      setShowManageModal(true);
+                      setShowCollectionsMenu(false);
+                    }}
+                  >
+                    <GearIcon size={14} /> {t("manage_collections")}
+                  </button>
                 </div>
               )}
             </div>
-
-            <button
-              type="button"
-              className="library__utility-button"
-              onClick={() => setShowCreateModal(true)}
-            >
-              {t("create_collection")}
-            </button>
-
-            <button
-              type="button"
-              className="library__utility-button"
-              onClick={() => setShowManageModal(true)}
-            >
-              {t("manage_collections")}
-            </button>
           </div>
+        </div>
+
+        <div
+          className="library__news-section"
+          data-library-news-slot
+          role="complementary"
+          aria-label={t("news")}
+        >
+          <SteamNewsSection />
         </div>
 
         <div className="library__quick-filters">

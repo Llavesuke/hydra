@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from "react";
+import type React from "react";
 import { useTranslation } from "react-i18next";
 import { ChevronRightIcon, ChevronLeftIcon } from "@primer/octicons-react";
 import type { SteamNewsEntry, SteamNewsItem } from "@types";
@@ -14,9 +15,17 @@ interface NewsCardProps {
 }
 
 function preprocessSteamNewsHtml(html: string): string {
-  return html
-    .replace(/\{STEAM_CLAN_IMAGE\}/g, "https://clan.cloudflare.steamstatic.com/images")
-    .replace(/\{STEAM_APP_IMAGE\}/g, "https://cdn.cloudflare.steamstatic.com/steam/apps");
+  return (html ?? "")
+    .replace(
+      /\{STEAM_CLAN_IMAGE\}/g,
+      "https://clan.cloudflare.steamstatic.com/images"
+    )
+    .replace(
+      /\{STEAM_APP_IMAGE\}/g,
+      "https://cdn.cloudflare.steamstatic.com/steam/apps"
+    )
+    .replace(/src="\/\//g, 'src="https://')
+    .replace(/href="\/\//g, 'href="https://');
 }
 
 function extractFirstImageSrc(html: string): string | null {
@@ -46,7 +55,11 @@ const NewsCard = ({ entry, newsItem, onOpen }: NewsCardProps) => {
     onOpen(entry, newsItem);
   };
 
-  const newsCover = extractFirstImageSrc(newsItem.contents) || entry.libraryImageUrl || entry.coverImageUrl || null;
+  const newsCover =
+    extractFirstImageSrc(newsItem.contents) ||
+    entry.libraryImageUrl ||
+    entry.coverImageUrl ||
+    null;
 
   return (
     <div
@@ -139,6 +152,17 @@ export default function SteamNewsSection() {
     }
   };
 
+  const handleWheel = (e: React.WheelEvent<HTMLDivElement>) => {
+    const container = scrollContainerRef.current;
+    if (!container) return;
+
+    // If vertical scroll is intended, translate it into horizontal scroll for the carousel
+    if (Math.abs(e.deltaY) > Math.abs(e.deltaX)) {
+      e.preventDefault();
+      container.scrollBy({ left: e.deltaY, behavior: "smooth" });
+    }
+  };
+
   const openModal = (entry: SteamNewsEntry, item: SteamNewsItem) => {
     setSelectedEntry(entry);
     setSelectedItem(item);
@@ -227,6 +251,7 @@ export default function SteamNewsSection() {
         <div
           ref={scrollContainerRef}
           className="steam-news-section__cards-container"
+          onWheel={handleWheel}
         >
           {displayedNews.map((entry) =>
             entry.newsItems.map((newsItem) => (
