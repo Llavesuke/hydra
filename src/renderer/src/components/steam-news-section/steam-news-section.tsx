@@ -5,18 +5,20 @@ import type { SteamNewsEntry, SteamNewsItem } from "@types";
 import { useSteamNews, useDate } from "@renderer/hooks";
 
 import "./steam-news-section.scss";
+import { SteamNewsModal } from "./steam-news-modal";
 
 interface NewsCardProps {
   entry: SteamNewsEntry;
   newsItem: SteamNewsItem;
+  onOpen: (entry: SteamNewsEntry, item: SteamNewsItem) => void;
 }
 
-const NewsCard = ({ entry, newsItem }: NewsCardProps) => {
+const NewsCard = ({ entry, newsItem, onOpen }: NewsCardProps) => {
   const { t } = useTranslation("library");
   const { formatRelativeTime } = useDate();
 
   const handleClick = () => {
-    window.electron.openExternal(newsItem.url);
+    onOpen(entry, newsItem);
   };
 
   return (
@@ -46,7 +48,7 @@ const NewsCard = ({ entry, newsItem }: NewsCardProps) => {
       </div>
       <div className="steam-news-card__content">
         <h3 className="steam-news-card__title">{newsItem.title}</h3>
-        <p className="steam-news-card__excerpt">{newsItem.contents}</p>
+        <p className="steam-news-card__excerpt">{newsItem.excerpt}</p>
         <div className="steam-news-card__footer">
           <span className="steam-news-card__date">
             {t("news_published", {
@@ -69,6 +71,11 @@ export default function SteamNewsSection() {
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(false);
+
+  const [selectedEntry, setSelectedEntry] = useState<SteamNewsEntry | null>(
+    null
+  );
+  const [selectedItem, setSelectedItem] = useState<SteamNewsItem | null>(null);
 
   const displayedNews = isExpanded ? news : news.slice(0, 3);
 
@@ -103,6 +110,16 @@ export default function SteamNewsSection() {
         behavior: "smooth",
       });
     }
+  };
+
+  const openModal = (entry: SteamNewsEntry, item: SteamNewsItem) => {
+    setSelectedEntry(entry);
+    setSelectedItem(item);
+  };
+
+  const closeModal = () => {
+    setSelectedEntry(null);
+    setSelectedItem(null);
   };
 
   if (isLoading) {
@@ -190,6 +207,7 @@ export default function SteamNewsSection() {
                 key={`${entry.appId}-${newsItem.gid}`}
                 entry={entry}
                 newsItem={newsItem}
+                onOpen={openModal}
               />
             ))
           )}
@@ -204,6 +222,13 @@ export default function SteamNewsSection() {
           </button>
         )}
       </div>
+
+      <SteamNewsModal
+        visible={Boolean(selectedEntry && selectedItem)}
+        entry={selectedEntry}
+        newsItem={selectedItem}
+        onClose={closeModal}
+      />
     </div>
   );
 }

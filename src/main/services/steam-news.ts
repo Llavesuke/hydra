@@ -33,13 +33,13 @@ const fetchSteamNews = async (
       ? "english"
       : language.toLowerCase();
 
+    // Fetch full contents (no maxlength) so we can display the article in a modal
     const response = await axios.get<SteamNewsResponse>(
       `https://api.steampowered.com/ISteamNews/GetNewsForApp/v2/`,
       {
         params: {
           appid: appId,
           count: MAX_NEWS_ITEMS_PER_GAME,
-          maxlength: 300,
           format: "json",
         },
         timeout: NEWS_REQUEST_TIMEOUT_MS,
@@ -50,8 +50,10 @@ const fetchSteamNews = async (
       return response.data.appnews.newsitems.map((item) => ({
         ...item,
         appid: appId,
-        contents: truncateText(stripHtmlTags(item.contents), 200),
-      }));
+        // Keep full HTML contents for the modal and generate a short excerpt for cards
+        contents: item.contents,
+        excerpt: truncateText(stripHtmlTags(item.contents), 200),
+      } as SteamNewsItem));
     }
 
     if (languageCode !== "english") {
@@ -61,7 +63,6 @@ const fetchSteamNews = async (
           params: {
             appid: appId,
             count: MAX_NEWS_ITEMS_PER_GAME,
-            maxlength: 300,
             format: "json",
           },
           timeout: NEWS_REQUEST_TIMEOUT_MS,
@@ -72,8 +73,9 @@ const fetchSteamNews = async (
         return fallbackResponse.data.appnews.newsitems.map((item) => ({
           ...item,
           appid: appId,
-          contents: truncateText(stripHtmlTags(item.contents), 200),
-        }));
+          contents: item.contents,
+          excerpt: truncateText(stripHtmlTags(item.contents), 200),
+        } as SteamNewsItem));
       }
     }
 

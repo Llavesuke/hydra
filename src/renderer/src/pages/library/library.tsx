@@ -2,7 +2,6 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import Skeleton, { SkeletonTheme } from "react-loading-skeleton";
-import VirtualList from "rc-virtual-list";
 import {
   SearchIcon,
   FilterIcon,
@@ -18,13 +17,11 @@ import {
   toggleCategory,
   clearCategories,
   setSortBy,
-  toggleQuickFilter,
   clearLibraryFilters,
   selectFilteredAndSortedGames,
   selectAvailableCategories,
   setLibrary,
   type SortBy,
-  type QuickFilter,
 } from "@renderer/features";
 import { buildGameDetailsPath } from "@renderer/helpers";
 import type { LibraryGame } from "@types";
@@ -33,16 +30,6 @@ import { ManageCollectionsModal } from "./modals/manage-collections-modal";
 
 import "./library.scss";
 
-const CARD_HEIGHT = 320;
-const CARD_GAP = 16;
-const ROW_HEIGHT = CARD_HEIGHT + CARD_GAP;
-
-interface LibraryRow {
-  key: string;
-  items: LibraryGame[];
-  columnCount: number;
-}
-
 export default function Library() {
   const { t } = useTranslation("library");
   const navigate = useNavigate();
@@ -50,7 +37,6 @@ export default function Library() {
   const { library, updateLibrary } = useLibrary();
   const { loadCollections } = useCollections();
 
-  const listContainerRef = useRef<HTMLDivElement>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
   const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -59,7 +45,6 @@ export default function Library() {
   const [showSortMenu, setShowSortMenu] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isLoadingCategories, setIsLoadingCategories] = useState(false);
-  const [listSize, setListSize] = useState({ width: 0, height: 0 });
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showManageModal, setShowManageModal] = useState(false);
 
@@ -72,43 +57,6 @@ export default function Library() {
     (state) => state.libraryFilters.selectedCategories
   );
   const sortBy = useAppSelector((state) => state.libraryFilters.sortBy);
-  const activeQuickFilters = useAppSelector(
-    (state) => state.libraryFilters.activeQuickFilters
-  );
-
-  const getColumnsCount = useCallback((width: number) => {
-    if (width >= 1600) return 4;
-    if (width >= 1250) return 3;
-    if (width >= 768) return 2;
-    return 1;
-  }, []);
-
-  useEffect(() => {
-    const element = listContainerRef.current;
-    if (!element) return;
-
-    const updateSize = () => {
-      setListSize({
-        width: element.clientWidth,
-        height: element.clientHeight,
-      });
-    };
-
-    updateSize();
-
-    if (typeof ResizeObserver === "undefined") {
-      window.addEventListener("resize", updateSize);
-      return () => window.removeEventListener("resize", updateSize);
-    }
-
-    const observer = new ResizeObserver(() => {
-      updateSize();
-    });
-
-    observer.observe(element);
-
-    return () => observer.disconnect();
-  }, []);
 
   useEffect(() => {
     setIsLoading(true);
@@ -130,9 +78,6 @@ export default function Library() {
       window.electron
         .getLibraryCategories(gamesData)
         .then((categoriesMap) => {
-          // Update library games with categories
-          // This would ideally update the Redux state but for simplicity
-          // we'll handle it through a library refresh pattern
           Object.keys(categoriesMap).forEach((gameId) => {
             const game = library.find((g) => g.id === gameId);
             if (game) {
@@ -140,7 +85,6 @@ export default function Library() {
             }
           });
 
-          // Trigger state update so selectors recompute available categories
           dispatch(setLibrary([...library]));
         })
         .catch((err) => {
@@ -232,28 +176,6 @@ export default function Library() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const columnCount = useMemo(() => {
-    return Math.max(getColumnsCount(listSize.width), 1);
-  }, [listSize.width, getColumnsCount]);
-
-  const rows = useMemo<LibraryRow[]>(() => {
-    const chunkSize = Math.max(columnCount, 1);
-    const chunks: LibraryRow[] = [];
-
-    for (let i = 0; i < filteredLibrary.length; i += chunkSize) {
-      const items = filteredLibrary.slice(i, i + chunkSize);
-      const key = items.map((game) => game.id).join("-") || `row-${i}`;
-
-      chunks.push({
-        key,
-        items,
-        columnCount: chunkSize,
-      });
-    }
-
-    return chunks;
-  }, [filteredLibrary, columnCount]);
-
   const handleGameClick = useCallback(
     (game: LibraryGame) => {
       const path = buildGameDetailsPath({
@@ -288,10 +210,6 @@ export default function Library() {
     setShowSortMenu(false);
   };
 
-  const handleQuickFilterToggle = (filter: QuickFilter) => {
-    dispatch(toggleQuickFilter(filter));
-  };
-
   const handleClearAllFilters = () => {
     setLocalSearchText("");
     dispatch(clearLibraryFilters());
@@ -301,39 +219,10 @@ export default function Library() {
     loadCollections();
   }, [loadCollections]);
 
-  const renderRow = (row: LibraryRow) => (
-    <div
-      className="library__grid-row"
-      style={{
-        gridTemplateColumns: `repeat(${row.columnCount}, minmax(0, 1fr))`,
-      }}
-    >
-      {row.items.map((game) => (
-        <LibraryGameCard
-          key={game.id}
-          game={game}
-          onNavigate={() => handleGameClick(game)}
-        />
-      ))}
-      {row.items.length < row.columnCount &&
-        Array.from({ length: row.columnCount - row.items.length }).map(
-          (_, index) => (
-            <div
-              key={`placeholder-${row.key}-${index}`}
-              className="library__grid-placeholder"
-            />
-          )
-        )}
-    </div>
-  );
-
-  const hasActiveFilters =
-    localSearchText ||
-    selectedCategories.length > 0 ||
-    activeQuickFilters.length > 0;
-
   const isEmpty = !isLoading && filteredLibrary.length === 0;
-  const virtualListHeight = listSize.height || 600;
+  const hasActiveFilters = useMemo(() => {
+    return Boolean(localSearchText || selectedCategories.length > 0);
+  }, [localSearchText, selectedCategories.length]);
 
   return (
     <SkeletonTheme baseColor="#1c1c1c" highlightColor="#444">
@@ -488,44 +377,6 @@ export default function Library() {
           </div>
         </div>
 
-        <div className="library__quick-filters">
-          <span className="library__quick-filters-label">
-            {t("quick_filters")}:
-          </span>
-          <button
-            type="button"
-            className={`library__chip${activeQuickFilters.includes("favorites") ? " library__chip--active" : ""}`}
-            onClick={() => handleQuickFilterToggle("favorites")}
-          >
-            {t("filter_favorites")}
-          </button>
-          <button
-            type="button"
-            className={`library__chip${activeQuickFilters.includes("installed") ? " library__chip--active" : ""}`}
-            onClick={() => handleQuickFilterToggle("installed")}
-          >
-            {t("filter_installed")}
-          </button>
-          <button
-            type="button"
-            className={`library__chip${activeQuickFilters.includes("backlog") ? " library__chip--active" : ""}`}
-            onClick={() => handleQuickFilterToggle("backlog")}
-          >
-            {t("filter_backlog")}
-          </button>
-
-          {hasActiveFilters && (
-            <button
-              type="button"
-              className="library__chip library__chip--clear"
-              onClick={handleClearAllFilters}
-            >
-              <XIcon size={14} />
-              {t("clear_filters")}
-            </button>
-          )}
-        </div>
-
         <div
           className="library__news-section"
           data-library-news-slot
@@ -536,30 +387,41 @@ export default function Library() {
         </div>
 
         <div className="library__content">
-          <div ref={listContainerRef} className="library__list-container">
-            {isLoading ? (
-              <div className="library__grid">
-                {Array.from({ length: 12 }).map((_, index) => (
-                  <Skeleton key={index} className="library__skeleton" />
-                ))}
-              </div>
-            ) : isEmpty ? (
-              <div className="library__empty-state">
-                <h2>{t("empty_title")}</h2>
-                <p>{t("empty_description")}</p>
-              </div>
-            ) : listSize.height > 0 ? (
-              <VirtualList
-                data={rows}
-                height={virtualListHeight}
-                itemHeight={ROW_HEIGHT}
-                itemKey="key"
-                className="library__virtual-list"
+          {isLoading ? (
+            <div className="library__grid">
+              {Array.from({ length: 12 }).map((_, index) => (
+                <Skeleton key={index} className="library__skeleton" />
+              ))}
+            </div>
+          ) : isEmpty ? (
+            <div className="library__empty-state">
+              <h2>{t("empty_title")}</h2>
+              <p>{t("empty_description")}</p>
+            </div>
+          ) : (
+            <div className="library__grid">
+              {filteredLibrary.map((game) => (
+                <LibraryGameCard
+                  key={game.id}
+                  game={game}
+                  onNavigate={() => handleGameClick(game)}
+                />
+              ))}
+            </div>
+          )}
+
+          {hasActiveFilters && (
+            <div className="library__filters-footer">
+              <button
+                type="button"
+                className="library__chip library__chip--clear"
+                onClick={handleClearAllFilters}
               >
-                {renderRow}
-              </VirtualList>
-            ) : null}
-          </div>
+                <XIcon size={14} />
+                {t("clear_filters")}
+              </button>
+            </div>
+          )}
         </div>
 
         <CreateCollectionModal
