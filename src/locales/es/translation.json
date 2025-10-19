@@ -547,9 +547,16 @@
     "news_see_more": "Ver más",
     "news_see_less": "Ver menos",
     "news_published": "Publicado {{time}}",
-    "news_read_more": "Leer más"
-  },
-  "binary_not_found_modal": {
+    "news_read_more": "Leer más",
+    "layout": "Diseño",
+    "density": "Densidad",
+    "compact": "Compacto",
+    "cozy": "Cómodo",
+    "spacious": "Amplio",
+    "show_suggestions": "Mostrar sugerencias",
+    "suggestions": "Sugerencias"
+    },
+    "binary_not_found_modal": {
     "title": "Programas no instalados",
     "description": "Ejecutables de Wine o Lutris executables no encontrados en tu sistema",
     "instructions": "Comprobá la forma correcta de instalar cualquiera de ellos en tu distribución de Linux para que el juego pueda ejecutarse con normalidad"

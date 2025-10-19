@@ -25,6 +25,7 @@ import {
   selectAvailableCategories,
   setLibrary,
   toggleQuickFilter,
+  selectSmartSuggestions,
   type SortBy,
 } from "@renderer/features";
 import { buildGameDetailsPath } from "@renderer/helpers";
@@ -56,9 +57,24 @@ export default function Library() {
   >(null);
   const [showCollectionsMenu, setShowCollectionsMenu] = useState(false);
 
+  const [showCustomizeMenu, setShowCustomizeMenu] = useState(false);
+
+  // UI customization
+  const [gridMin, setGridMin] = useState<number>(() => {
+    const cached = window.localStorage.getItem("library-grid-min");
+    const parsed = cached ? parseInt(cached, 10) : 160;
+    return Number.isFinite(parsed) ? parsed : 160;
+  });
+  const [showSuggestions, setShowSuggestions] = useState<boolean>(() => {
+    const cached = window.localStorage.getItem("library-show-suggestions");
+    if (cached == null) return true;
+    return cached !== "0";
+  });
+
   const categoryMenuRef = useRef<HTMLDivElement>(null);
   const sortMenuRef = useRef<HTMLDivElement>(null);
   const collectionsMenuRef = useRef<HTMLDivElement>(null);
+  const customizeMenuRef = useRef<HTMLDivElement>(null);
 
   const filteredLibrary = useAppSelector(selectFilteredAndSortedGames);
   const availableCategories = useAppSelector(selectAvailableCategories);
@@ -69,6 +85,7 @@ export default function Library() {
   const activeQuickFilters = useAppSelector(
     (state) => state.libraryFilters.activeQuickFilters
   );
+  const smartSuggestions = useAppSelector(selectSmartSuggestions);
 
   useEffect(() => {
     setIsLoading(true);
@@ -226,6 +243,12 @@ export default function Library() {
       ) {
         setShowCollectionsMenu(false);
       }
+      if (
+        customizeMenuRef.current &&
+        !customizeMenuRef.current.contains(event.target as Node)
+      ) {
+        setShowCustomizeMenu(false);
+      }
     };
 
     document.addEventListener("mousedown", handleClickOutside);
@@ -297,9 +320,25 @@ export default function Library() {
     dispatch(toggleQuickFilter(filter));
   };
 
+  const setDensity = (value: number) => {
+    setGridMin(value);
+    window.localStorage.setItem("library-grid-min", String(value));
+    setShowCustomizeMenu(false);
+  };
+
+  const toggleSuggestions = () => {
+    const newValue = !showSuggestions;
+    setShowSuggestions(newValue);
+    window.localStorage.setItem("library-show-suggestions", newValue ? "1" : "0");
+  };
+
+  const gridStyle = {
+    ["--library-grid-min" as any]: `${gridMin}px`,
+  } as React.CSSProperties;
+
   return (
     <SkeletonTheme baseColor="#1c1c1c" highlightColor="#444">
-      <section className="library">
+      <section className="library" style={gridStyle}>
         <div className="library__utility-bar">
           <div className="library__search-wrapper">
             <SearchIcon size={16} />
@@ -500,6 +539,60 @@ export default function Library() {
                 </div>
               )}
             </div>
+
+            <div className="library__filter-group" ref={customizeMenuRef}>
+              <button
+                type="button"
+                className="library__utility-button"
+                onClick={() => setShowCustomizeMenu((v) => !v)}
+                aria-label={t("layout")}
+              >
+                <span>{t("layout")}</span>
+                <ChevronDownIcon size={16} />
+              </button>
+
+              {showCustomizeMenu && (
+                <div className="library__dropdown-menu">
+                  <div className="library__menu-item library__menu-item--disabled">
+                    {t("density")}
+                  </div>
+                  <button
+                    type="button"
+                    className={`library__menu-item${gridMin === 140 ? " library__menu-item--active" : ""}`}
+                    onClick={() => setDensity(140)}
+                  >
+                    {t("compact")}
+                  </button>
+                  <button
+                    type="button"
+                    className={`library__menu-item${gridMin === 180 ? " library__menu-item--active" : ""}`}
+                    onClick={() => setDensity(180)}
+                  >
+                    {t("cozy")}
+                  </button>
+                  <button
+                    type="button"
+                    className={`library__menu-item${gridMin === 220 ? " library__menu-item--active" : ""}`}
+                    onClick={() => setDensity(220)}
+                  >
+                    {t("spacious")}
+                  </button>
+
+                  <div className="library__menu-divider" />
+
+                  <button
+                    type="button"
+                    className={`library__menu-item library__menu-item--checkbox${showSuggestions ? " library__menu-item--active" : ""}`}
+                    onClick={toggleSuggestions}
+                  >
+                    <span className="library__checkbox">
+                      {showSuggestions && "✓"}
+                    </span>
+                    {t("show_suggestions")}
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
         </div>
 
@@ -511,6 +604,22 @@ export default function Library() {
         >
           <SteamNewsSection />
         </div>
+
+        {showSuggestions && smartSuggestions.length > 0 && (
+          <div className="library__suggestions">
+            <h3 className="library__suggestions-title">{t("suggestions")}</h3>
+            <div className="library__suggestions-list">
+              {smartSuggestions.map((game) => (
+                <div key={game.id}>
+                  <LibraryGameCard
+                    game={game}
+                    onNavigate={() => handleGameClick(game)}
+                  />
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         <div className="library__quick-filters">
           <button
