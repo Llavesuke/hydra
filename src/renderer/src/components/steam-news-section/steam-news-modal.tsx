@@ -27,6 +27,22 @@ function extractFirstImageSrc(html: string): string | null {
   }
 }
 
+function preprocessSteamNewsHtml(html: string): string {
+  let processed = html;
+
+  // Replace Steam macro placeholders with absolute URLs
+  processed = processed.replace(/\{STEAM_CLAN_IMAGE\}/g, "https://clan.cloudflare.steamstatic.com/images");
+  processed = processed.replace(/\{STEAM_APP_IMAGE\}/g, "https://cdn.cloudflare.steamstatic.com/steam/apps");
+
+  // Basic BBCode to HTML conversions (common in some Steam posts)
+  processed = processed.replace(/\[img\](.*?)\[\/img\]/gi, '<img src="$1" />');
+  processed = processed.replace(/\[url=(.*?)\](.*?)\[\/url\]/gi, '<a href="$1">$2<\/a>');
+  processed = processed.replace(/\[b\](.*?)\[\/b\]/gi, '<strong>$1<\/strong>');
+  processed = processed.replace(/\[i\](.*?)\[\/i\]/gi, '<em>$1<\/em>');
+
+  return processed;
+}
+
 function sanitizeNewsHtml(html: string): string {
   const allowedTags = new Set([
     "a",
@@ -115,13 +131,15 @@ export function SteamNewsModal({ visible, entry, newsItem, onClose }: SteamNewsM
 
   const headerImage = useMemo(() => {
     if (!entry || !newsItem) return null;
-    const fromContent = extractFirstImageSrc(newsItem.contents);
+    const fromContent = extractFirstImageSrc(preprocessSteamNewsHtml(newsItem.contents));
     return fromContent || entry.libraryImageUrl || entry.coverImageUrl || null;
   }, [entry, newsItem]);
 
   const sanitizedHtml = useMemo(() => {
     if (!newsItem) return "";
-    return sanitizeNewsHtml(newsItem.contents);
+    // Preprocess to expand Steam placeholders and simple BBCode, then sanitize
+    const preprocessed = preprocessSteamNewsHtml(newsItem.contents);
+    return sanitizeNewsHtml(preprocessed);
   }, [newsItem]);
 
   const publishedAt = useMemo(() => {

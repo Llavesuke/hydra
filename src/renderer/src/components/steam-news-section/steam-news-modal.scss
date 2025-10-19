@@ -60,6 +60,19 @@
       color: rgba(255, 255, 255, 0.9);
     }
 
+    p {
+      margin: 0 0 12px;
+    }
+
+    ul, ol {
+      margin: 8px 0 12px 20px;
+    }
+
+    h1, h2, h3, h4 {
+      margin: 16px 0 8px;
+      color: rgba(255,255,255,0.95);
+    }
+
     a {
       color: #16b195;
       text-decoration: underline;
